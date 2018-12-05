@@ -34,6 +34,7 @@ class ModuleVastTrafik:
 
         # Create a sub panel to main panel that can be deleted next update
         panel = wx.Panel(self.mainPanel, style=wx.EXPAND|wx.ALIGN_CENTER)
+        panel.SetBackgroundColour('Black')
         panel.Freeze()    # Freeze to avoid flickering
 
         LblTitle = wx.StaticText(panel, label='Avgångar från Svingeln {}'.format(self.data.departures['localDateTime'].strftime('%H:%M')), style=wx.ALIGN_LEFT)

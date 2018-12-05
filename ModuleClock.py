@@ -23,16 +23,19 @@ class ModuleClock:
             myobj.Destroy()
 
         panel = wx.Panel(self.mainPanel, style=wx.EXPAND|wx.ALIGN_CENTER)
+        panel.SetBackgroundColour('Black')
         panel.Freeze()
-        panel.SetBackgroundColour("Orange")
 
         now = datetime.now()
         LblDate = wx.StaticText(panel, label=now.strftime('%Y-%m-%d'), style=wx.ALIGN_LEFT)
-        LblDate.SetBackgroundColour("Green")
+        LblDate.SetBackgroundColour('Green')
+        LblDate.SetForegroundColour('White')
         LblWeek = wx.StaticText(panel, label=now.strftime('v. %W'), style=wx.ALIGN_RIGHT)
-        LblWeek.SetBackgroundColour("Gray")
+        LblWeek.SetBackgroundColour('Gray')
+        LblWeek.SetForegroundColour('White')
         LblTime = wx.StaticText(panel, label=now.strftime('TID %H:%M:%S'))
-        LblTime.SetBackgroundColour("Yellow")
+        LblTime.SetBackgroundColour('Yellow')
+        LblTime.SetForegroundColour('White')
 
         font1 = wx.Font(36, wx.DECORATIVE, wx.NORMAL, wx.BOLD)
         font2 = wx.Font(16, wx.DECORATIVE, wx.ITALIC, wx.NORMAL)
@@ -55,7 +58,8 @@ class ModuleClock:
 
         panel.Thaw()
         self.mainPanel.Thaw()
-
+        
+        LblTime.Refresh()
 
 
 

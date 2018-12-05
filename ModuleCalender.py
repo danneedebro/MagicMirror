@@ -41,13 +41,14 @@ class ModuleCalender:
 
         # Create a sub panel to main panel that can be deleted next update
         panel = wx.Panel(self.mainPanel, style=wx.EXPAND|wx.ALIGN_CENTER)
+        panel.SetBackgroundColour('Black')
         panel.Freeze()    # Freeze to avoid flickering
 
         sizerMain = wx.BoxSizer(wx.VERTICAL)
 
         # Fucked up way to get dateToday with timezone info
         now = datetime.now()
-        now = datetime.strptime(now.strftime('%Y-%m-%d %H:%M:%S') + '+01:00', '%Y-%m-%d %H:%M:%S%z')
+        now = datetime.strptime(now.strftime('%Y-%m-%d %H:%M:%S') + '+0100', '%Y-%m-%d %H:%M:%S%z')
         dateToday = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         weekDays = {0: 'Måndag', 1: 'Tisdag', 2: 'Onsdag', 3: 'Torsdag', 4: 'Fredag', 5: 'Lördag', 6: 'Söndag'}

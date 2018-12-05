@@ -2,8 +2,8 @@ import wx
 import time
 from datetime import datetime
 import ModuleClock, ModuleVastTrafik, ModuleCalender
-import os
-import psutil
+#import os
+#import psutil
 
 class Example(wx.Frame):
 
@@ -16,15 +16,15 @@ class Example(wx.Frame):
         self.clock = ModuleClock.ModuleClock(self.panel_clock)
 
         self.panel_vasttrafik = wx.Panel(self, pos=(550,0))#, size=(400,300))
-        self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(self.panel_vasttrafik, update_freq_graphics=1, update_freq_data=80)
+        self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(self.panel_vasttrafik, update_freq_graphics=10, update_freq_data=80)
 
         self.panel_calender = wx.Panel(self, pos=(0, 150))  # , size=(400,300))
-        self.calender = ModuleCalender.ModuleCalender(self.panel_calender, update_freq_graphics=1, update_freq_data=90)
+        self.calender = ModuleCalender.ModuleCalender(self.panel_calender, update_freq_graphics=10, update_freq_data=90)
 
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.tick, self.timer)
-        self.timer.Start(200)
+        self.timer.Start(500)
         self.Show()
 
 
@@ -49,10 +49,10 @@ class Example(wx.Frame):
 
 
         # Check memory use by process every 30 seconds
-        if (now - self.lastcall).seconds > 10:
-            process = psutil.Process(os.getpid())
-            print('memory use =', process.memory_info().rss / 1000, 'kb')
-            self.lastcall = now
+ #       if (now - self.lastcall).seconds > 10:
+ #           process = psutil.Process(os.getpid())
+ #           print('memory use =', process.memory_info().rss / 1000, 'kb')
+ #           self.lastcall = now
 
 
 
