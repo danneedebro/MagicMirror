@@ -70,19 +70,19 @@ class ModuleCalender:
                 if start.strftime('%Y-%m-%d') == currDay.strftime('%Y-%m-%d') or (currDay >= start and currDay < end):
                     dayEmpty = False
                     if 'date' in event['start']:
-                        LblEvent = wx.StaticText(panel, label="{}".format(event['summary']))
+                        LblEvent = wx.StaticText(panel, label=" {}".format(event['summary']))
                         LblEvent.SetForegroundColour('White')
                         LblEvent.SetFont(self.font_events)
                         sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 2)
                     else:
-                        LblEvent = wx.StaticText(panel, label="{} {}".format(event['summary'], event['start']['dateTime2'].strftime('%H:%M')))
+                        LblEvent = wx.StaticText(panel, label=" {} {}".format(event['summary'], event['start']['dateTime2'].strftime('%H:%M')))
                         LblEvent.SetForegroundColour('White')
                         LblEvent.SetFont(self.font_events)
                         sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 2)
 
 
             if dayEmpty == True:
-                LblEvent = wx.StaticText(panel, label="{}".format('(Ingenting)'))
+                LblEvent = wx.StaticText(panel, label=" {}".format('(Ingenting)'))
                 LblEvent.SetForegroundColour('Gray')
                 LblEvent.SetFont(self.font_events)
                 sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 2)

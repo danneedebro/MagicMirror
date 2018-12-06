@@ -30,9 +30,12 @@ class ModuleClock:
         LblDate = wx.StaticText(panel, label=now.strftime('%Y-%m-%d'), style=wx.ALIGN_LEFT)
         LblDate.SetBackgroundColour('Green')
         LblDate.SetForegroundColour('White')
-        LblWeek = wx.StaticText(panel, label=now.strftime('v. %W'), style=wx.ALIGN_RIGHT)
+        panelWeek = wx.Panel(panel, style=wx.ALIGN_RIGHT)
+        panelWeek.SetBackgroundColour('Gray')
+        LblWeek = wx.StaticText(panelWeek, label=now.strftime('v. %W'), style=wx.ALIGN_RIGHT|wx.RAISED_BORDER)
         LblWeek.SetBackgroundColour('Gray')
         LblWeek.SetForegroundColour('White')
+        
         LblTime = wx.StaticText(panel, label=now.strftime('TID %H:%M:%S'))
         LblTime.SetBackgroundColour('Yellow')
         LblTime.SetForegroundColour('White')
@@ -46,13 +49,14 @@ class ModuleClock:
         sizerMain = wx.BoxSizer(wx.VERTICAL)
         sizerOne = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizerOne.Add(LblDate, 2, wx.ALL, 0)
-        sizerOne.Add(LblWeek, 1, wx.ALL, 0)
+        sizerOne.Add(LblDate, 1, wx.ALL, 0)
+        sizerOne.Add(panelWeek, 1, wx.ALIGN_RIGHT, 0)
 
         sizerMain.Add(sizerOne, 0, wx.ALL|wx.EXPAND, 5)
         sizerMain.Add(LblTime, 0, wx.ALL|wx.EXPAND, 5)
 
         panel.SetSizer(sizerMain)
+        #panelWeek.Fit()
         panel.Fit()
         self.mainPanel.Fit()
 
