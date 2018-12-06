@@ -69,8 +69,10 @@ class ModuleVastTrafik:
 
             fields = [None] * 7
             sizer_props = [None] * 4
-
-            fields[0] = wx.StaticText(panel, label="{}".format(departure['sname'][0].center(7, ' ')), style=wx.ALIGN_CENTER)
+            
+            tmpPanel = wx.Panel(panel)               # A extra panel is needed on the Raspberry because
+            tmpPanel.SetBackgroundColour(bg_color)   # a the statictext fails to set a backgroundcolor
+            fields[0] = wx.StaticText(tmpPanel, label="{}".format(departure['sname'][0].center(7, ' ')), style=wx.ALIGN_CENTER)
             fields[0].SetBackgroundColour(bg_color)
             fields[0].SetForegroundColour(text_color)
             fields[1] = wx.StaticText(panel, label="{:15.12}".format(departure['direction'][0]))
@@ -88,8 +90,11 @@ class ModuleVastTrafik:
                     #if cnt % 2 == 0: fields[i].SetBackgroundColour(wx.Colour(38, 38, 38, 255))  # Gray if even row
 
                 fields[i].SetFont(self.font_departure)
-
-                sizer_props[0] = fields[i]
+                
+                if i == 0:
+                    sizer_props[0] = tmpPanel
+                else:
+                    sizer_props[0] = fields[i]
                 sizer_props[1] = 1
                 sizer_props[3] = 0
 
