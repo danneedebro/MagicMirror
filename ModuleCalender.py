@@ -1,3 +1,8 @@
+"""
+Graphic module for Google Calender data
+
+"""
+
 #   -----------------------------
 #   |Today                      |
 #   -----------------------------
@@ -13,15 +18,29 @@ import GoogleCalender.GoogleCalender
 
 
 class ModuleCalender:
-    def __init__(self, mainPanel, update_freq_graphics, update_freq_data):
+    def __init__(self, mainPanel, *args, **kwargs): #update_freq_graphics, update_freq_data):
+        """
+        Constructor. Creates a graphical module to display Google Calender data
+
+        Args:
+            mainPanel:                  wx.Panel object for the container/panel that holds the other widgets
+            update_freq_graphics (int): Time in seconds between updates of the graphical module
+            update_freq_data (int):     Time in seconds between fetching data from Google
+
+        """
+
         self.mainPanel = mainPanel
-        self.update_freq_graphics = update_freq_graphics
-        self.update_freq_data = update_freq_data
+
+        self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 30
+        self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 60
+        self.days_to_plot_in_detail = kwargs['days_to_plot_in_detail'] if 'days_to_plot_in_detail' in kwargs else 7
+        self.days_to_plot_total = kwargs['days_to_plot_total'] if 'days_to_plot_total' in kwargs else 14
+
         self.updated_graphics = datetime.now()
         self.updated_data = datetime.now()
-        self.font_headline = wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.SLANT, weight=wx.FONTWEIGHT_NORMAL)
+        self.font_headline = wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
         self.font_events = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
-
+        self.font_last_updated = wx.Font(pointSize=9, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
         credentials_filename = 'GoogleCalender/credentials.json'
         token_filenames = ['GoogleCalender/Calender_shared.json', 'GoogleCalender/Calender_personal.json']
         self.data = GoogleCalender.GoogleCalender.GoogleCalender(credentials_filename, token_filenames)
@@ -31,18 +50,27 @@ class ModuleCalender:
 
 
     def update(self):
+        """
+        Updates the graphics
+
+        Step 1. Delete all objects in mainPanel
+        Step 2. Creates StaticText objects that are added to a boxsizer (Vertical)
+
+        """
         now = datetime.now()
         self.updated_graphics = now
         self.mainPanel.Freeze()   # Freeze to avoid flickering
 
         # Delete all objects in main container for this module
         for myobj in self.mainPanel.GetChildren():
+            myobj.DestroyChildren()
             myobj.Destroy()
 
+
         # Create a sub panel to main panel that can be deleted next update
-        panel = wx.Panel(self.mainPanel, style=wx.EXPAND|wx.ALIGN_CENTER)
+        panel = wx.Panel(self.mainPanel, style=wx.EXPAND|wx.ALIGN_CENTER | wx.FULL_REPAINT_ON_RESIZE)
         panel.SetBackgroundColour('Black')
-        panel.Freeze()    # Freeze to avoid flickering
+        #panel.Freeze()    # Freeze to avoid flickering
 
         sizerMain = wx.BoxSizer(wx.VERTICAL)
 
@@ -52,8 +80,10 @@ class ModuleCalender:
         dateToday = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         weekDays = {0: 'Måndag', 1: 'Tisdag', 2: 'Onsdag', 3: 'Torsdag', 4: 'Fredag', 5: 'Lördag', 6: 'Söndag'}
+        weekDays_short = {0: 'mån', 1: 'tis', 2: 'ons', 3: 'tor', 4: 'fre', 5: 'lör', 6: 'sön'}
 
-        for i in range(0, 8):
+        # Print out the next X days in detail
+        for i in range(0, self.days_to_plot_in_detail):
             currDay = dateToday + timedelta(days=i)
             dayEmpty = True
 
@@ -64,41 +94,103 @@ class ModuleCalender:
             sizerMain.Add(LblDay, 1, wx.ALIGN_LEFT, 2)
 
             # Loop through all events and determine if that event takes place on current day
-            for event in self.data.events:
+            for event in self.data.events[0]:
                 start = event['start']['dateTime2']
                 end = event['end']['dateTime2']
                 if start.strftime('%Y-%m-%d') == currDay.strftime('%Y-%m-%d') or (currDay >= start and currDay < end):
                     dayEmpty = False
-                    if 'date' in event['start']:
-                        LblEvent = wx.StaticText(panel, label=" {}".format(event['summary']))
-                        LblEvent.SetForegroundColour('White')
-                        LblEvent.SetFont(self.font_events)
-                        sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 2)
-                    else:
-                        LblEvent = wx.StaticText(panel, label=" {} {}".format(event['summary'], event['start']['dateTime2'].strftime('%H:%M')))
-                        LblEvent.SetForegroundColour('White')
-                        LblEvent.SetFont(self.font_events)
-                        sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 2)
+                    LblEvent = wx.StaticText(panel, label=self.getEventString(event, print_weekday=False))
+                    LblEvent.SetForegroundColour('White')
+                    LblEvent.SetFont(self.font_events)
+                    sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 0)
 
-
+            # If day is empty print out a greyed out text with text (nothing)
             if dayEmpty == True:
                 LblEvent = wx.StaticText(panel, label=" {}".format('(Ingenting)'))
                 LblEvent.SetForegroundColour('Gray')
                 LblEvent.SetFont(self.font_events)
-                sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 2)
+                sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 0)
+
+            sizerMain.AddSpacer(10)
+        # End day-loop
+
+
+        # Print out events that takes place later (but within max days)
+        currDay = dateToday + timedelta(days=i+1)
+        LblDay = wx.StaticText(panel, label="Senare")
+        LblDay.SetForegroundColour('White')
+        LblDay.SetFont(self.font_headline)
+        sizerMain.Add(LblDay, 1, wx.ALIGN_LEFT, 2)
+        for event in self.data.events[0]:
+            #print(event['summary'])
+            start = event['start']['dateTime2']
+            end = event['end']['dateTime2']
+            if start >= currDay and start <= dateToday + timedelta(days=self.days_to_plot_total):
+                LblEvent = wx.StaticText(panel, label=self.getEventString(event))
+                LblEvent.SetForegroundColour('White')
+                LblEvent.SetFont(self.font_events)
+                sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 0)
+
+        sizerMain.AddSpacer(10)
+
+        # Print out the last updated/created event
+        currDay = dateToday + timedelta(days=i + 1)
+        LblDay = wx.StaticText(panel, label="Senast uppdaterad")
+        LblDay.SetForegroundColour('White')
+        LblDay.SetFont(self.font_events)
+        sizerMain.Add(LblDay, 1, wx.ALIGN_LEFT, 0)
+        for event in self.data.events[2]:
+            start = event['start']['dateTime2']
+            updated = datetime.strptime(event['updated'], '%Y-%m-%dT%H:%M:%S.%f%z')
+            if start >= dateToday and (dateToday - updated).days < 10:
+                print('{} {}'.format(event['summary'], event['updated']))
+                LblEvent = wx.StaticText(panel, label=self.getEventString(event), style=wx.ALIGN_CENTER_VERTICAL)
+                LblEvent.SetForegroundColour('White')
+                LblEvent.SetBackgroundColour('Black')
+                LblEvent.SetFont(self.font_last_updated)
+                sizerMain.Add(LblEvent, 1, wx.ALIGN_LEFT, 0)
 
         panel.SetSizer(sizerMain)
         panel.Fit()
         self.mainPanel.Fit()
 
-        panel.Thaw()          # This avoids flickering
+        #panel.Thaw()          # This avoids flickering
         self.mainPanel.Thaw()
 
     def updateDataSet(self):
+        """
+        Updates the data set using the GoogleCalender/GoogleCalender.py -module
+
+        """
         # User input to fetch Google calender data
         self.updated_data = datetime.now()
         print('Hämtar data från Google')
         self.data.update()
 
 
+    def getEventString(self, event, *args, **kwargs):
+        # Returns a
+        print_weekday = kwargs['print_weekday'] if 'print_weekday' in kwargs else True
+
+        weekDays_short = {0: 'mån', 1: 'tis', 2: 'ons', 3: 'tor', 4: 'fre', 5: 'lör', 6: 'sön'}
+        start = event['start']['dateTime2']
+        end = event['end']['dateTime2']
+        if 'date' in event['start'] and print_weekday == True:
+            if (end - start).days == 1:
+                datetime_str = '{} {} {}'.format(weekDays_short[start.weekday()], start.day, start.strftime('%b'))
+            elif start.month == end.month:
+                datetime_str = '{}-{} {}-{} {}'.format(weekDays_short[start.weekday()], weekDays_short[end.weekday()],
+                                                       start.day, end.day, start.strftime('%b'))
+            else:
+                datetime_str = '{}-{} {} {}-{} {}'.format(weekDays_short[start.weekday()], weekDays_short[end.weekday()],
+                                                       start.day, start.strftime('%b'), end.day, end.strftime('%b'))
+        elif 'date' in event['start'] and print_weekday == False:
+            datetime_str = '(1/2)'
+        elif print_weekday == False:
+            datetime_str = '{}-{}'.format(start.strftime('%H:%M'), end.strftime('%H:%M'))
+        else:
+            datetime_str = '{} {}-{}'.format(weekDays_short[start.weekday()], start.strftime('%H:%M'), end.strftime('%H:%M'))
+
+
+        return ' {} ({})'.format(event['summary'], datetime_str)
 

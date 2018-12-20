@@ -12,13 +12,17 @@ import VastTrafik.VastTrafik
 
 
 class ModuleVastTrafik:
-    def __init__(self, mainPanel, update_freq_graphics, update_freq_data):
+    def __init__(self, mainPanel, *args, **kwargs):
         self.mainPanel = mainPanel
-        self.update_freq_graphics = update_freq_graphics
-        self.update_freq_data = update_freq_data
+
+        self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 10
+        self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 60
+
+        font_size = kwargs['fontSize'] if 'fontSize' in kwargs else 12
+
         self.updated_graphics = datetime.now()
         self.updated_data = datetime.now()
-        self.font_departure = wx.FFont(12, wx.FONTFAMILY_MODERN,  flags=wx.FONTFLAG_STRIKETHROUGH)
+        self.font_departure = wx.FFont(font_size, wx.FONTFAMILY_MODERN,  flags=wx.FONTFLAG_STRIKETHROUGH)
         self.data = VastTrafik.VastTrafik.VastTrafik('fYzDg69mhe3eytZLUGiTBrFl2cQa', '0e163wTfFJAFteDgl607KhMkb2Ia', 9021014006480000)
         self.update()
 
@@ -29,7 +33,6 @@ class ModuleVastTrafik:
 
         # Delete all objects in main container for this module
         for myobj in self.mainPanel.GetChildren():
-            #myobj.DestroyChildren()
             myobj.Destroy()
 
         # Create a sub panel to main panel that can be deleted next update
@@ -80,7 +83,7 @@ class ModuleVastTrafik:
             fields[3] = wx.StaticText(panel, label="{}".format(accessibility1))
             fields[4] = wx.StaticText(panel, label="{:>5}".format(time_to_departure2))
             fields[5] = wx.StaticText(panel, label="{}".format(accessibility2))
-            fields[6] = wx.StaticText(panel, label="{:>5}".format(track))
+            fields[6] = wx.StaticText(panel, label="{:>2}".format(track))
             for i in range(0, 7):
                 if i == 0:
                     fields[i].SetBackgroundColour(bg_color)
