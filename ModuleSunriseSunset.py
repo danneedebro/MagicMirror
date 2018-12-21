@@ -86,7 +86,7 @@ class ModuleSunriseSunset:
         Updates the data set from SMHI weather service
 
         """
-        print('Retrieving data from sunrise-sunset.org')
+        print('Retrieving data from sunrise-sunset.org\n   lat={}, long={}'.format(self.lat, self.long))
         self.updated_data = datetime.now()
         self.url = 'https://api.sunrise-sunset.org/json?lat={}&lng={}&date={}&formatted=0'.format(self.lat, self.long, datetime.now().strftime('%Y-%m-%d'))
         r = requests.get(self.url)

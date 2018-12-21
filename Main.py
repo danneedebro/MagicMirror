@@ -6,13 +6,15 @@ import ModuleClock, ModuleVastTrafik, ModuleCalender, ModuleWeather, ModuleSunri
 #import psutil
 
 class Example(wx.Frame):
-
+    coordinates = {'Göteborg': {'lat': 57.71084, 'long': 11.99120}, 'Skellefteå': {'lat': 64.75755, 'long': 20.95051},
+                   'Älvsbyn': {'lat': 65.67258, 'long': 21.03356}}
+    currentCity = 'Älvsbyn'
     def __init__(self, parent, title):
         self.lastcall = datetime.now()
         super(Example, self).__init__(parent, title=title, size=(900, 750))
         self.SetBackgroundColour('Black')
 
-        self.panel_clock = wx.Panel(self, pos=(0,0))#, size=(400,300))
+        self.panel_clock = wx.Panel(self)
         self.clock = ModuleClock.ModuleClock(self.panel_clock)
 
         self.panel_vasttrafik = wx.Panel(self, pos=(550,0))
@@ -22,10 +24,12 @@ class Example(wx.Frame):
         self.calender = ModuleCalender.ModuleCalender(self.panel_calender, days_to_plot_in_detail=3)
 
         self.panel_weather = wx.Panel(self, pos=(250, 150))
-        self.weather = ModuleWeather.ModuleWeather(self.panel_weather, lat=65.67258, long=21.03356)
+        self.weather = ModuleWeather.ModuleWeather(self.panel_weather, lat=self.coordinates[self.currentCity]['lat'],
+                                                   long=self.coordinates[self.currentCity]['long'])
 
         self.panel_sunset = wx.Panel(self)
-        self.sunset = ModuleSunriseSunset.ModuleSunriseSunset(self.panel_sunset, lat=65.67258, long=21.03356)
+        self.sunset = ModuleSunriseSunset.ModuleSunriseSunset(self.panel_sunset, lat=self.coordinates[self.currentCity]['lat'],
+                                                              long=self.coordinates[self.currentCity]['long'])
 
         sizerLeft = wx.BoxSizer(wx.VERTICAL)
         sizerRight = wx.BoxSizer(wx.VERTICAL)
@@ -47,7 +51,6 @@ class Example(wx.Frame):
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.tick, self.timer)
         self.timer.Start(500)
-        #self.ShowFullScreen(True)
 
         self.Bind(wx.EVT_KEY_DOWN, self.onKeyPress)
 
