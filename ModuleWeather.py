@@ -14,19 +14,27 @@ import pytz
 
 
 class ModuleWeather:
+    url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'
+    timezone = pytz.timezone('Europe/Stockholm')
+    weather_symb = {1: "Klart", 2: "Lätt molnighet", 3: "Halvklart", 4: "Molnigt", 5: "Mycket moln", 6: "Mulet",
+                    7: "Dimma", 8: "Lätt regnskur", 9: "Regnskur", 10: "Kraftig regnskur", 11: "Åskskur",
+                    12: "Lätt by av regn och snö", 13: "By av regn och snö", 14: "Kraftig by av regn och snö",
+                    15: "Lätt snöby", 16: "Snöby", 17: "Kraftig snöby", 18: "Lätt regn", 19: "Regn",
+                    20: "Kraftigt regn", 21: "Åska", 22: "Lätt snöblandat regn", 23: "Snöblandat regn",
+                    24: "Kraftigt snöblandat regn", 25: "Lätt snöfall", 26: "Snöfall", 27: "Ymnigt snöfall"}
+
     def __init__(self, mainPanel, *args, **kwargs):
         self.mainPanel = mainPanel
 
         self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 60
         self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 600
 
-        self.lat = kwargs['lat'] if 'lat' in kwargs else [64.75203]
-        self.long = kwargs['long'] if 'long' in kwargs else [20.95350]
-        self.city = kwargs['city'] if 'city' in kwargs else ['Stad']
-        self.url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'.format(self.long[0], self.lat[0])
-
-        self.weather_symb = {1: "Klart", 2: "Lätt molnighet", 3: "Halvklart", 4: "Molnigt", 5: "Mycket moln", 6: "Mulet", 7: "Dimma", 8: "Lätt regnskur", 9: "Regnskur", 10: "Kraftig regnskur", 11: "Åskskur", 12: "Lätt by av regn och snö", 13: "By av regn och snö", 14: "Kraftig by av regn och snö", 15: "Lätt snöby", 16: "Snöby", 17: "Kraftig snöby", 18: "Lätt regn", 19: "Regn", 20: "Kraftigt regn", 21: "Åska", 22: "Lätt snöblandat regn", 23: "Snöblandat regn", 24: "Kraftigt snöblandat regn", 25: "Lätt snöfall", 26: "Snöfall", 27: "Ymnigt snöfall"}
-        self.timezone = pytz.timezone('Europe/Stockholm')
+        self.places = kwargs['places'] if 'places' in kwargs else {'Skellefteå': {'lat': 64.75203, 'long': 20.95350}}
+        self.index = 0
+        self.place_names = []
+        for place in self.places:
+            self.place_names.append(place)
+        self.data = [None]*len(self.places)
 
         self.updated_graphics = datetime.now()
         self.updated_data = datetime.now()
@@ -60,17 +68,17 @@ class ModuleWeather:
 
         now = datetime.now()
 
-        LblCity = wx.StaticText(panel, label=self.city[0])
+        LblCity = wx.StaticText(panel, label=self.place_names[self.index])
         LblCity.SetForegroundColour('White')
         LblCity.SetFont(self.font_other)
 
-        tempVal = self.getParameter(self.data['timeSeries'][0], 't')
+        tempVal = self.getParameter(self.data[self.index]['timeSeries'][0], 't')
         LblTemperature = wx.StaticText(panel, label=str(tempVal) + chr(176))
         LblTemperature.SetBackgroundColour('Black')
         LblTemperature.SetForegroundColour('White')
         LblTemperature.SetFont(self.font_temp)
 
-        wsymb2 = self.getParameter(self.data['timeSeries'][0], 'Wsymb2')
+        wsymb2 = self.getParameter(self.data[self.index]['timeSeries'][0], 'Wsymb2')
 
         new_height = 120
         png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY)
@@ -165,29 +173,38 @@ class ModuleWeather:
         Updates the data set from SMHI weather service
 
         """
-        print('Retrieving data from SMHI\n   lat={}, long={}'.format(self.lat[0], self.long[0]))
-        self.updated_data = datetime.now()
 
-        r = requests.get(self.url)
+        cnt = -1
+        for place_name, place in self.places.items():
+            print(place_name)
+            print(place)
+            cnt += 1
 
-        if r.status_code == 200:
-            tmp = r.json()
-            self.status_ok = True
-        else:
-            print('Error during GET request to SMHI' + str(r.status_code) + str(r.content))
-            self.status_ok = False
+            print('Retrieving data from SMHI\n   lat={}, long={}'.format(place['lat'], place['long']))
+            self.updated_data = datetime.now()
 
-        # If data retrieved OK, load it into self.data
-        if self.status_ok == True:
-            self.data = tmp
+            url = self.url.format(place['long'], place['lat'])
+
+            r = requests.get(url)
+
+            if r.status_code == 200:
+                tmp = r.json()
+                self.status_ok = True
+            else:
+                print('Error during GET request to SMHI' + str(r.status_code) + str(r.content) + ', url=' + r.url)
+                self.status_ok = False
+
+            # If data retrieved OK, load it into self.data
+            if self.status_ok == True:
+                self.data[cnt] = tmp
 
     def getCurrentWeather(self):
         """
         Get timeSerie
         """
-        now = datetime.now(pytz.timezone('Europe/Stockholm'))
+        now = datetime.now(self.timezone)
 
-        for timeSerie in self.data['timeSeries']:
+        for timeSerie in self.data[self.index]['timeSeries']:
             currTime = datetime.strptime(timeSerie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
             if (currTime - now).total_seconds() < 3600:
                 return timeSerie
@@ -203,15 +220,15 @@ class ModuleWeather:
         return requestedParameter['values'][0]
 
     def getTime(self, local_datetime):
-        validtime_prev = datetime.strptime(self.data['referenceTime'], '%Y-%m-%dT%H:%M:%S%z')
-        for timeSerie in self.data['timeSeries']:
+        validtime_prev = datetime.strptime(self.data[self.index]['referenceTime'], '%Y-%m-%dT%H:%M:%S%z')
+        for timeSerie in self.data[self.index]['timeSeries']:
             validtime = datetime.strptime(timeSerie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
             if validtime_prev < local_datetime <= validtime:
                 return timeSerie
 
     def getTimeAverage(self, startTime, endTime, param_str):
         values = []
-        for timeSerie in self.data['timeSeries']:
+        for timeSerie in self.data[self.index]['timeSeries']:
             validtime = datetime.strptime(timeSerie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
             if startTime < validtime <= endTime:
                 for parameter in timeSerie['parameters']:

@@ -24,8 +24,8 @@ class Example(wx.Frame):
         self.calender = ModuleCalender.ModuleCalender(self.panel_calender, days_to_plot_in_detail=3)
 
         self.panel_weather = wx.Panel(self, pos=(250, 150))
-        self.weather = ModuleWeather.ModuleWeather(self.panel_weather, lat=[self.coordinates[self.currentCity]['lat']],
-                                                   long=[self.coordinates[self.currentCity]['long']], city=[self.currentCity])
+        self.weather = ModuleWeather.ModuleWeather(self.panel_weather, places=self.coordinates) ##lat=[self.coordinates[self.currentCity]['lat']],
+                                                   #long=[self.coordinates[self.currentCity]['long']], city=[self.currentCity])
 
         self.panel_sunset = wx.Panel(self)
         self.sunset = ModuleSunriseSunset.ModuleSunriseSunset(self.panel_sunset, lat=self.coordinates[self.currentCity]['lat'],
