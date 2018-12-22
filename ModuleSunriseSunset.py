@@ -49,7 +49,7 @@ class ModuleSunriseSunset:
         panel.Freeze()  # Freeze to avoid flickering
 
         LblSunrise = wx.StaticText(panel, label=self.sunrise.strftime('%H:%M'))
-        LblSunrise.SetBackgroundColour('Black')
+        LblSunrise.SetBackgroundColour('Green')
         LblSunrise.SetForegroundColour('White')
         LblSunrise.SetFont(self.font_temp)
 
@@ -66,10 +66,10 @@ class ModuleSunriseSunset:
 
         sizerMain = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizerMain.Add(LblSunrise, 0, wx.ALL|wx.ALIGN_BOTTOM, 0)
-        sizerMain.Add(picSunrise, 0, wx.ALL|wx.ALIGN_BOTTOM, 0)
-        sizerMain.Add(LblSunset, 0, wx.ALL|wx.ALIGN_BOTTOM, 0)
-        sizerMain.Add(picSunset, 0, wx.ALL|wx.ALIGN_BOTTOM, 0)
+        sizerMain.Add(LblSunrise, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
+        sizerMain.Add(picSunrise, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
+        sizerMain.Add(LblSunset, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
+        sizerMain.Add(picSunset, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
 
 
         panel.SetSizer(sizerMain)

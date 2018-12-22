@@ -20,9 +20,10 @@ class ModuleWeather:
         self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 60
         self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 600
 
-        self.lat = kwargs['lat'] if 'lat' in kwargs else 64.75203
-        self.long = kwargs['long'] if 'long' in kwargs else 20.95350
-        self.url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'.format(self.long, self.lat)
+        self.lat = kwargs['lat'] if 'lat' in kwargs else [64.75203]
+        self.long = kwargs['long'] if 'long' in kwargs else [20.95350]
+        self.city = kwargs['city'] if 'city' in kwargs else ['Stad']
+        self.url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'.format(self.long[0], self.lat[0])
 
         self.weather_symb = {1: "Klart", 2: "Lätt molnighet", 3: "Halvklart", 4: "Molnigt", 5: "Mycket moln", 6: "Mulet", 7: "Dimma", 8: "Lätt regnskur", 9: "Regnskur", 10: "Kraftig regnskur", 11: "Åskskur", 12: "Lätt by av regn och snö", 13: "By av regn och snö", 14: "Kraftig by av regn och snö", 15: "Lätt snöby", 16: "Snöby", 17: "Kraftig snöby", 18: "Lätt regn", 19: "Regn", 20: "Kraftigt regn", 21: "Åska", 22: "Lätt snöblandat regn", 23: "Snöblandat regn", 24: "Kraftigt snöblandat regn", 25: "Lätt snöfall", 26: "Snöfall", 27: "Ymnigt snöfall"}
         self.timezone = pytz.timezone('Europe/Stockholm')
@@ -58,6 +59,11 @@ class ModuleWeather:
         panel.Freeze()  # Freeze to avoid flickering
 
         now = datetime.now()
+
+        LblCity = wx.StaticText(panel, label=self.city[0])
+        LblCity.SetForegroundColour('White')
+        LblCity.SetFont(self.font_other)
+
         tempVal = self.getParameter(self.data['timeSeries'][0], 't')
         LblTemperature = wx.StaticText(panel, label=str(tempVal) + chr(176))
         LblTemperature.SetBackgroundColour('Black')
@@ -65,23 +71,19 @@ class ModuleWeather:
         LblTemperature.SetFont(self.font_temp)
 
         wsymb2 = self.getParameter(self.data['timeSeries'][0], 'Wsymb2')
-        #LblTypeOfWeather = wx.StaticText(panel, label=self.weather_symb[wsymb2])#, style=wx.ALIGN_RIGHT)
-        #LblTypeOfWeather.SetBackgroundColour('Black')
-        #LblTypeOfWeather.SetForegroundColour('White')
-        #LblTypeOfWeather.SetFont(self.font_other)
 
-        png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY).Scale(172, 120, wx.IMAGE_QUALITY_HIGH)
+        new_height = 120
+        png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY)
+        png = png.Scale(int(png.GetWidth()/png.GetHeight()*new_height), new_height, wx.IMAGE_QUALITY_HIGH)
         mypic=wx.StaticBitmap(panel, -1, wx.Bitmap(png))
 
-        line1 = wx.StaticLine(panel, 0, style=wx.LI_VERTICAL)
-        line1.SetForegroundColour('White')
+
 
         sizerMain = wx.BoxSizer(wx.HORIZONTAL)
         sizerLeft = wx.BoxSizer(wx.VERTICAL)
         sizerUpperLeft = wx.BoxSizer(wx.HORIZONTAL)
 
         sizerUpperLeft.Add(LblTemperature, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 0)
-        #sizerMain.Add(LblTypeOfWeather, 0, wx.ALIGN_RIGHT, 0)
         sizerUpperLeft.Add(mypic, 0, wx.ALL, 0)
 
 
@@ -89,7 +91,7 @@ class ModuleWeather:
         # Data table for weather today
         nDiv = 5
         delta_hour = int((24 - round(now.hour + 0.99)) / nDiv + 0.99)
-        sizerTable1 = wx.FlexGridSizer(nDiv, 2, 2, 2)
+        sizerTable1 = wx.FlexGridSizer(nDiv, 2, 0, 0)
         for i in range(1,nDiv+1):
             cTime = (now + timedelta(hours=i*delta_hour)).astimezone(self.timezone)
             timeSerie = self.getTime(cTime)
@@ -104,12 +106,16 @@ class ModuleWeather:
             Lbl1.SetFont(self.font_table)
             png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY).Scale(35, 24, wx.IMAGE_QUALITY_HIGH)
             mypic = wx.StaticBitmap(panel, -1, wx.Bitmap(png))
-            sizerTable1.Add(Lbl1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-            sizerTable1.Add(mypic, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
+            sizerTable1.Add(Lbl1, 1, wx.ALIGN_CENTER_VERTICAL, 0)
+            sizerTable1.Add(mypic, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
 
             print('Kl {} {}:  T={}{}   {}'.format(validtime.astimezone(self.timezone).hour, timeSerie['validTime'], self.getParameter(timeSerie, 't'), chr(176), timeSerie))
 
-        sizerTable1.AddGrowableCol(1, 2)
+        sizerTable1.AddGrowableCol(1, 1)
+
+        line1 = wx.StaticLine(panel, 0, style=wx.LI_HORIZONTAL)
+        line1.SetForegroundColour('Grey')
+
 
         # Data table for weather tomorrow
         time_values = [0, 3, 6, 9, 12, 15, 18, 21, 24]
@@ -136,18 +142,16 @@ class ModuleWeather:
             print('Kl {} {}:  T={}{}   {}'.format(validtime.astimezone(self.timezone).hour, timeSerie['validTime'],
                                                   self.getParameter(timeSerie, 't'), chr(176), timeSerie))
 
-        sizerTable2.AddGrowableCol(1, 2)
+        sizerTable2.AddGrowableCol(1, 1)
 
 
-
+        sizerLeft.Add(LblCity, 0, wx.ALIGN_CENTER, 0)
         sizerLeft.Add(sizerUpperLeft, 0, wx.EXPAND, 0)
         sizerLeft.Add(sizerTable1, 0, wx.EXPAND, 0)
+        sizerLeft.Add(line1, 0, wx.ALL|wx.EXPAND, 5)
+        sizerLeft.Add(sizerTable2, 0, wx.EXPAND, 0)
 
-        sizerMain.Add(sizerLeft)
-        sizerMain.Add(line1, 0, wx.ALL | wx.EXPAND, 0)
-        sizerMain.Add(sizerTable2)
-
-        panel.SetSizer(sizerMain)
+        panel.SetSizer(sizerLeft)
 
         panel.Fit()
         self.mainPanel.Fit()
@@ -161,7 +165,7 @@ class ModuleWeather:
         Updates the data set from SMHI weather service
 
         """
-        print('Retrieving data from SMHI\n   lat={}, long={}'.format(self.lat, self.long))
+        print('Retrieving data from SMHI\n   lat={}, long={}'.format(self.lat[0], self.long[0]))
         self.updated_data = datetime.now()
 
         r = requests.get(self.url)
