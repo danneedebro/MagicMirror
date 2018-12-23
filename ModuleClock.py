@@ -35,11 +35,11 @@ class ModuleClock:
         LblWeek.SetBackgroundColour('Black')
         LblWeek.SetForegroundColour('White')
         
-        LblTime = wx.StaticText(panel, label=now.strftime('%H:%M:%S'))
+        LblTime = wx.StaticText(panel, label=now.strftime('%H:%M'))
         LblTime.SetBackgroundColour('Black')
         LblTime.SetForegroundColour('White')
 
-        font1 = wx.Font(36, wx.DECORATIVE, wx.NORMAL, wx.BOLD)
+        font1 = wx.Font(72, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         font2 = wx.Font(16, wx.DECORATIVE, wx.ITALIC, wx.NORMAL)
         LblTime.SetFont(font1)
         LblDate.SetFont(font2)

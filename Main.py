@@ -72,11 +72,12 @@ class Example(wx.Frame):
         if (now - self.calender.updated_data).seconds >= self.calender.update_freq_data:
             self.calender.updateDataSet()
 
-        if (now - self.weather.updated_graphics).seconds >= self.weather.update_freq_graphics:
-            self.weather.update()
+        self.weather.do_update()
+        #if (now - self.weather.updated_graphics).seconds >= self.weather.update_freq_graphics:
+        #    self.weather.update()
 
-        if (now - self.weather.updated_data).seconds >= self.weather.update_freq_data:
-            self.weather.updateDataSet()
+        #if (now - self.weather.updated_data).seconds >= self.weather.update_freq_data:
+        #    self.weather.updateDataSet()
 
         self.clock.update()
 

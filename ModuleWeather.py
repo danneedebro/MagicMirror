@@ -13,6 +13,7 @@ import wx
 import pytz
 
 
+
 class ModuleWeather:
     url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'
     timezone = pytz.timezone('Europe/Stockholm')
@@ -30,7 +31,7 @@ class ModuleWeather:
         self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 600
 
         self.places = kwargs['places'] if 'places' in kwargs else {'Skellefteå': {'lat': 64.75203, 'long': 20.95350}}
-        self.index = 0
+        self.index = 2
         self.place_names = []
         for place in self.places:
             self.place_names.append(place)
@@ -50,6 +51,13 @@ class ModuleWeather:
 
         self.updateDataSet()
         self.update()
+
+    def do_update(self):
+        if (datetime.now() - self.updated_graphics).total_seconds() > 10:
+            print('UPPDATERAR {}'.format(self.index))
+            self.index = self.index + 1 if self.index < len(self.places)-1 else 0
+            print('UPPDATERAR {}'.format(self.index))
+            self.update()
 
     def update(self):
         now = datetime.now()
@@ -73,7 +81,7 @@ class ModuleWeather:
         LblCity.SetFont(self.font_other)
 
         tempVal = self.getParameter(self.data[self.index]['timeSeries'][0], 't')
-        LblTemperature = wx.StaticText(panel, label=str(tempVal) + chr(176))
+        LblTemperature = wx.StaticText(panel, label='{:>5}{}'.format(str(tempVal), chr(176)))
         LblTemperature.SetBackgroundColour('Black')
         LblTemperature.SetForegroundColour('White')
         LblTemperature.SetFont(self.font_temp)
@@ -91,8 +99,8 @@ class ModuleWeather:
         sizerLeft = wx.BoxSizer(wx.VERTICAL)
         sizerUpperLeft = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizerUpperLeft.Add(LblTemperature, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 0)
-        sizerUpperLeft.Add(mypic, 0, wx.ALL, 0)
+        sizerUpperLeft.Add(LblTemperature, 3, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 0)
+        sizerUpperLeft.Add(mypic, 2, wx.ALL, 0)
 
 
 
@@ -109,7 +117,7 @@ class ModuleWeather:
             pmean = self.getParameter(timeSerie, 'pmean')     # Mean precipitation intensity mm/hour
             wsymb2 = self.getParameter(timeSerie, 'Wsymb2')    # Weather symbol   1-27 integer
 
-            Lbl1 = wx.StaticText(panel, label='kl.{:2}   {}{}C    {} mm/h'.format(time_hour, temperature, chr(176), pmean))
+            Lbl1 = wx.StaticText(panel, label='kl.{:2}   {:>5}{}C    {:>4} mm/h'.format(time_hour, temperature, chr(176), pmean))
             Lbl1.SetForegroundColour("White")
             Lbl1.SetFont(self.font_table)
             png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY).Scale(35, 24, wx.IMAGE_QUALITY_HIGH)
@@ -139,7 +147,7 @@ class ModuleWeather:
             wsymb2 = self.getParameter(timeSerie, 'Wsymb2')  # Weather symbol   1-27 integer
 
             Lbl1 = wx.StaticText(panel,
-                                 label='kl.{:2}   {}{}C    {} mm/h'.format(time_hour, temperature, chr(176), pmean))
+                                 label='kl.{:2}   {:>5}{}C    {:>4} mm/h'.format(time_hour, temperature, chr(176), pmean))
             Lbl1.SetForegroundColour("White")
             Lbl1.SetFont(self.font_table)
             png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY).Scale(35, 24, wx.IMAGE_QUALITY_HIGH)
