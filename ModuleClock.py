@@ -8,6 +8,7 @@
 
 from datetime import datetime
 import wx
+import wx.lib.stattext as ST
 
 
 class ModuleClock:
@@ -36,15 +37,15 @@ class ModuleClock:
         panel.SetBackgroundColour('Black')
 
         now = datetime.now()
-        lbl_date = wx.StaticText(panel, label=now.strftime('%Y-%m-%d'), style=wx.ALIGN_LEFT)
+        lbl_date = ST.GenStaticText(panel, label=now.strftime('%Y-%m-%d'), style=wx.ALIGN_LEFT)
         lbl_date.SetBackgroundColour('Black')
         lbl_date.SetForegroundColour('White')
 
-        lbl_week = wx.StaticText(panel, label=now.strftime('v. %W'), style=wx.ALIGN_RIGHT)
+        lbl_week = ST.GenStaticText(panel, label=now.strftime('v. %W'), style=wx.ALIGN_RIGHT)
         lbl_week.SetBackgroundColour('Black')
         lbl_week.SetForegroundColour('White')
         
-        lbl_time = wx.StaticText(panel, label=now.strftime('%H:%M'))
+        lbl_time = ST.GenStaticText(panel, label=now.strftime('%H:%M'))
         lbl_time.SetBackgroundColour('Black')
         lbl_time.SetForegroundColour('White')
 
