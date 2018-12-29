@@ -10,17 +10,25 @@ from datetime import timedelta
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
+#
+# {'Tag': {'id': 'id', 'tokenFile':
+#
+#
+input_dict = {}
+
+input_dict['daniel&Sofia - primär'] = {'id': 'danielochsofia@gmail.com', 'tokenFile': 'Calender_shared.json',
+                                       'maxResults': 10}
+input_dict['daniel - primär'] = {'id': 'daniel.edebro@gmail.com', 'tokenFile': 'Calender_personal.json',
+                                       'maxResults': 10}
+input_dict['daniel - födelsedagar'] = {'id': '#contacts@group.v.calendar.google.com', 'tokenFile': 'Calender_personal.json',
+                                       'maxResults': 10}
 
 
 class GoogleCalender:
 
-    def __init__(self, credentials_filename, token_filenames, *args, **kwargs):
-        if not isinstance(token_filenames, list):
-            self.token_filenames = [token_filenames]
-        else:
-            self.token_filenames = token_filenames
-        if 'apa' in kwargs:
-            test=0
+    def __init__(self, credentials_filename, calendars_input, *args, **kwargs):
+
+        self.calendars_input = calendars_input
 
         self.credentials_filename = credentials_filename
         self.events = []
@@ -34,8 +42,13 @@ class GoogleCalender:
 
     def update(self):
         self.events = [[], [], []]
-        for i in range(0,len(self.token_filenames)):
-            store = file.Storage(self.token_filenames[i])
+
+        for calendar_tag, calendar in self.calendars_input.items():
+            token_file = calendar['tokenFile']
+            max_results = calendar['maxResults'] if 'maxResults' in calendar else 100
+            calendar_id = calendar['id'] if 'id' in calendar else 'primary'
+
+            store = file.Storage(token_file)
             creds = store.get()
 
             if not creds or creds.invalid:
@@ -48,14 +61,15 @@ class GoogleCalender:
             today = now.strftime('%Y-%m-%dT') + '00:00:00+01:00'
 
             for j in range(0, 3):
+                print('Läser in {} från tokenFile={}, index={}'.format(calendar_id, token_file, j))
                 if j == 0:
-                    events_result = service.events().list(calendarId='primary', timeMin=today, maxResults=100,
+                    events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
                                                           singleEvents=True, orderBy='startTime').execute()
                 elif j == 1:
-                    events_result = service.events().list(calendarId='primary', timeMin=today, maxResults=100,
+                    events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
                                                           singleEvents=False).execute()
                 elif j == 2:
-                    events_result = service.events().list(calendarId='primary', timeMin=today, maxResults=100,
+                    events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
                                                           singleEvents=False, orderBy='updated').execute()
 
                 events = events_result.get('items', [])
@@ -77,9 +91,10 @@ class GoogleCalender:
                 for event in events:
                     if 'summary' not in event:
                         event['summary'] = '(Ingen titel)'
+                    #print('   {} start={}, updated={}'.format(event['summary'], event['start'], event['updated']))
+                    #print(event)
                     self.events[j].append(event)
 
-                    #self.events[j].extend(events)
 
         # Sort list
         self.status_ok = True
@@ -91,14 +106,15 @@ class GoogleCalender:
 
 def main():
 
-    newCal = GoogleCalender('credentials.json', ['Calender_shared.json', 'Calender_personal.json'])
+    newCal = GoogleCalender('credentials.json', input_dict)
+    """
     for i in range(0,len(newCal.events)):
         print(newCal.events[i]['summary'], ' startar', newCal.events[i]['start']['dateTime2'].hour)
         if 'date' in newCal.events[i]['start']:
             print(newCal.events[i]['summary'], ' startar', newCal.events[i]['start']['date'], '(heldagsaktivitet)')
         else:
             print(newCal.events[i]['summary'], ' startar', newCal.events[i]['start']['dateTime'])
-
+    """
 
 
 

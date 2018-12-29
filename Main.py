@@ -4,11 +4,22 @@ import ModuleClock, ModuleVastTrafik, ModuleCalender, ModuleWeather, ModuleSunri
 # import os
 # import psutil
 
+# Google Calendar input
+input_dict = dict()
+input_dict['daniel&Sofia - primär'] = {'id': 'danielochsofia@gmail.com', 'tokenFile': 'GoogleCalender/Calender_shared.json',
+                                       'maxResults': 100}
+input_dict['daniel - primär'] = {'id': 'daniel.edebro@gmail.com', 'tokenFile': 'GoogleCalender/Calender_personal.json',
+                                       'maxResults': 100}
+input_dict['daniel - födelsedagar'] = {'id': '#contacts@group.v.calendar.google.com',
+                                       'tokenFile': 'GoogleCalender/Calender_personal.json', 'maxResults': 100}
+
+
+
 
 class Example(wx.Frame):
     coordinates = {'Göteborg': {'lat': 57.71084, 'long': 11.99120, 'duration': 3},
-                   'Skellefteå': {'lat': 64.75755, 'long': 20.95051, 'duration': 3},
-                   'Älvsbyn': {'lat': 65.67258, 'long': 21.03356, 'duration': 10}}
+                   'Skellefteå': {'lat': 64.75755, 'long': 20.95051, 'duration': 10},
+                   'Älvsbyn': {'lat': 65.67258, 'long': 21.03356, 'duration': 2}}
     currentCity = 'Älvsbyn'
 
     def __init__(self, parent, title):
@@ -24,7 +35,7 @@ class Example(wx.Frame):
                                                             update_freq_graphics=10, update_freq_data=80)
 
         panel_calender = wx.Panel(self)
-        self.calender = ModuleCalender.ModuleCalender(panel_calender, days_to_plot_in_detail=3)
+        self.calender = ModuleCalender.ModuleCalender(panel_calender, input_dict, days_to_plot_in_detail=3)
 
         cities = {'Älvsbyn', 'Skellefteå'}
         filtered = dict(zip(cities, [self.coordinates[k] for k in cities]))

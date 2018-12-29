@@ -25,7 +25,7 @@ class ModuleCalender:
     weekDays = {0: 'Måndag', 1: 'Tisdag', 2: 'Onsdag', 3: 'Torsdag', 4: 'Fredag', 5: 'Lördag', 6: 'Söndag'}
     timezone = pytz.timezone('Europe/Stockholm')
 
-    def __init__(self, panel_main, **kwargs):
+    def __init__(self, panel_main, calendars_input, **kwargs):
         """
         Constructor. Creates a graphical module to display Google Calender data
 
@@ -57,8 +57,8 @@ class ModuleCalender:
         self.font4 = wx.Font(pointSize=9, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
                              weight=wx.FONTWEIGHT_NORMAL)
         credentials_filename = 'GoogleCalender/credentials.json'
-        token_filenames = ['GoogleCalender/Calender_shared.json', 'GoogleCalender/Calender_personal.json']
-        self.data = GoogleCalender.GoogleCalender.GoogleCalender(credentials_filename, token_filenames)
+        #token_filenames = ['GoogleCalender/Calender_shared.json', 'GoogleCalender/Calender_personal.json']
+        self.data = GoogleCalender.GoogleCalender.GoogleCalender(credentials_filename, calendars_input)
 
         self.update_dataset()
         self.update_graphics()
