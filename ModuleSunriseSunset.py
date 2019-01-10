@@ -99,7 +99,7 @@ class ModuleSunriseSunset:
             print('Error during GET request to SMHI' + str(r.status_code) + str(r.content))
             self.status_ok = False
 
-        sunrise_utc = datetime.strptime(tmp['results']['sunrise'], '%Y-%m-%dT%H:%M:%S%z')
-        sunset_utc = datetime.strptime(tmp['results']['sunset'], '%Y-%m-%dT%H:%M:%S%z')
+        sunrise_utc = datetime.strptime(tmp['results']['sunrise'][0:-3]+'00', '%Y-%m-%dT%H:%M:%S%z')
+        sunset_utc = datetime.strptime(tmp['results']['sunset'][0:-3]+'00', '%Y-%m-%dT%H:%M:%S%z')
         self.sunrise = sunrise_utc.astimezone(self.timezone)
         self.sunset = sunset_utc.astimezone(self.timezone)

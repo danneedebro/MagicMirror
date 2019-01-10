@@ -177,7 +177,7 @@ class ModuleCalender:
         sizer_main.Add(lbl_day, 1, wx.ALIGN_LEFT, 0)
         for event in self.data.events[2]:
             start = event['start']['dateTime2']
-            updated = datetime.strptime(event['updated'], '%Y-%m-%dT%H:%M:%S.%f%z')
+            updated = datetime.strptime(event['updated'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S.%f%z')
             if start >= date_today and (date_today - updated).days < 10:
                 lbl_event = wx.StaticText(panel, label=event['summary'])
                 lbl_event.SetForegroundColour('White')

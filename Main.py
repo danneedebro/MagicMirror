@@ -17,10 +17,10 @@ input_dict['daniel - födelsedagar'] = {'id': '#contacts@group.v.calendar.google
 
 
 class Example(wx.Frame):
-    coordinates = {'Göteborg': {'lat': 57.71084, 'long': 11.99120, 'duration': 3},
+    coordinates = {'Göteborg': {'lat': 57.71084, 'long': 11.99120, 'duration': 10},
                    'Skellefteå': {'lat': 64.75755, 'long': 20.95051, 'duration': 10},
                    'Älvsbyn': {'lat': 65.67258, 'long': 21.03356, 'duration': 2}}
-    currentCity = 'Älvsbyn'
+    currentCity = 'Göteborg'
 
     def __init__(self, parent, title):
         self.lastcall = datetime.now()
@@ -37,7 +37,7 @@ class Example(wx.Frame):
         panel_calender = wx.Panel(self)
         self.calender = ModuleCalender.ModuleCalender(panel_calender, input_dict, days_to_plot_in_detail=3)
 
-        cities = {'Älvsbyn', 'Skellefteå'}
+        cities = {'Göteborg'}
         filtered = dict(zip(cities, [self.coordinates[k] for k in cities]))
         panel_weather = wx.Panel(self)
         self.weather = ModuleWeather.ModuleWeather(panel_weather, places=filtered)
@@ -71,6 +71,7 @@ class Example(wx.Frame):
         self.Bind(wx.EVT_KEY_DOWN, self.on_keypress)
 
         self.Show()
+        self.ShowFullScreen(True)
 
     def tick(self, ev):
         now = datetime.now()

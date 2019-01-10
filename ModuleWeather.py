@@ -81,7 +81,7 @@ class ModuleWeather:
         panel.SetBackgroundColour('Black')
         panel.Freeze()  # Freeze to avoid flickering
 
-        now = datetime.now()
+        now = datetime.now(self.timezone)
 
         lbl_city = wx.StaticText(panel, label=self.place_names[self.index])
         lbl_city.SetForegroundColour('White')
@@ -113,7 +113,7 @@ class ModuleWeather:
         for i in range(1,n_div+1):
             curr_time = (now + timedelta(hours=i*delta_hour)).astimezone(self.timezone)
             time_serie = self.getTime(curr_time)
-            valid_time = datetime.strptime(time_serie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
+            valid_time = datetime.strptime(time_serie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
             time_hour = valid_time.astimezone(self.timezone).hour
             temperature = self.getParameter(time_serie, 't')   # temperature degC
             pmean = self.getParameter(time_serie, 'pmean')     # Mean precipitation intensity mm/hour
@@ -140,7 +140,7 @@ class ModuleWeather:
         for time_value in time_values:
             curr_time = (tomorrow + timedelta(hours=time_value)).astimezone(self.timezone)
             time_serie = self.getTime(curr_time)
-            valid_time = datetime.strptime(time_serie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
+            valid_time = datetime.strptime(time_serie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
             time_hour = valid_time.astimezone(self.timezone).hour
             temperature = self.getParameter(time_serie, 't')  # temperature degC
             pmean = self.getParameter(time_serie, 'pmean')  # Mean precipitation intensity mm/hour
@@ -219,16 +219,16 @@ class ModuleWeather:
         return requested_parameter['values'][0]
 
     def getTime(self, local_datetime):
-        validtime_prev = datetime.strptime(self.data[self.index]['referenceTime'], '%Y-%m-%dT%H:%M:%S%z')
+        validtime_prev = datetime.strptime(self.data[self.index]['referenceTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
         for timeSerie in self.data[self.index]['timeSeries']:
-            validtime = datetime.strptime(timeSerie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
+            validtime = datetime.strptime(timeSerie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
             if validtime_prev < local_datetime <= validtime:
                 return timeSerie
 
     def getTimeAverage(self, startTime, endTime, param_str):
         values = []
         for timeSerie in self.data[self.index]['timeSeries']:
-            validtime = datetime.strptime(timeSerie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
+            validtime = datetime.strptime(timeSerie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
             if startTime < validtime <= endTime:
                 for parameter in timeSerie['parameters']:
                     if parameter['name'] == param_str:
