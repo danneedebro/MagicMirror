@@ -37,6 +37,7 @@ class ModuleCalender:
         """
 
         self.panel_main = panel_main
+        self.caledars_input = calendars_input
 
         self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 30
         self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 60

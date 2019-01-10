@@ -7,11 +7,11 @@ import ModuleClock, ModuleVastTrafik, ModuleCalender, ModuleWeather, ModuleSunri
 # Google Calendar input
 input_dict = dict()
 input_dict['daniel&Sofia - primär'] = {'id': 'danielochsofia@gmail.com', 'tokenFile': 'GoogleCalender/Calender_shared.json',
-                                       'maxResults': 100}
+                                       'maxResults': 100, 'textColor': 'red'}
 input_dict['daniel - primär'] = {'id': 'daniel.edebro@gmail.com', 'tokenFile': 'GoogleCalender/Calender_personal.json',
-                                       'maxResults': 100}
+                                       'maxResults': 100, 'textColor': 'blue'}
 input_dict['daniel - födelsedagar'] = {'id': '#contacts@group.v.calendar.google.com',
-                                       'tokenFile': 'GoogleCalender/Calender_personal.json', 'maxResults': 100}
+                                       'tokenFile': 'GoogleCalender/Calender_personal.json', 'maxResults': 100, 'textColor': 'yellow'}
 
 
 
