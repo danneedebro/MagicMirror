@@ -47,6 +47,7 @@ class GoogleCalender:
             token_file = calendar['tokenFile']
             max_results = calendar['maxResults'] if 'maxResults' in calendar else 100
             calendar_id = calendar['id'] if 'id' in calendar else 'primary'
+            track_updates = calendar['trackUpdates'] if 'trackUpdates' in calendar else True
 
             store = file.Storage(token_file)
             creds = store.get()
@@ -68,7 +69,9 @@ class GoogleCalender:
                 elif j == 1:
                     events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
                                                           singleEvents=False).execute()
-                elif j == 2:
+                elif j == 2:   
+                    if track_updates is False:
+                        break
                     events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
                                                           singleEvents=False, orderBy='updated').execute()
 
