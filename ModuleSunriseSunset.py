@@ -9,25 +9,30 @@ import pytz
 
 class ModuleSunriseSunset:
     timezone = pytz.timezone('Europe/Stockholm')
+    fontSize = 25
 
-    def __init__(self, panel_main, *args, **kwargs):
+    def __init__(self, panel_main, userSettings):
         self.panel_main = panel_main
 
-        self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 60
-        self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 600
-
-        self.lat = kwargs['lat'] if 'lat' in kwargs else 64.75203
-        self.long = kwargs['long'] if 'long' in kwargs else 20.95350
+        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 600
+        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 60
+        print(userSettings)
+        if 'places' in userSettings:
+            place = next(iter(userSettings['places']))
+        else:
+            place = ''
+        
+        self.lat = userSettings['places'][place]['lat'] if 'lat' in userSettings['places'][place] else 64.75203
+        self.long = userSettings['places'][place]['long'] if 'long' in userSettings['places'][place] else 64.75203
+        
         self.url = 'https://api.sunrise-sunset.org/json?lat={}&lng={}&date={}&formatted=0'.format(self.lat, self.long, datetime.now().strftime('%Y-%m-%d'))
-
-        font_size = kwargs['font_size'] if 'font_size' in kwargs else 25
 
         self.updated_graphics = datetime.now()
         self.updated_data = datetime.now()
 
         self.status_ok = False
 
-        self.font1 = wx.Font(pointSize=font_size, family=wx.FONTFAMILY_DEFAULT, style=wx.SLANT,
+        self.font1 = wx.Font(pointSize=self.fontSize, family=wx.FONTFAMILY_DEFAULT, style=wx.SLANT,
                              weight=wx.FONTWEIGHT_NORMAL)
         self.font2 = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
                              weight=wx.FONTWEIGHT_NORMAL)

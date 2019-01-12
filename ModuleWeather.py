@@ -23,13 +23,13 @@ class ModuleWeather:
                     20: "Kraftigt regn", 21: "Åska", 22: "Lätt snöblandat regn", 23: "Snöblandat regn",
                     24: "Kraftigt snöblandat regn", 25: "Lätt snöfall", 26: "Snöfall", 27: "Ymnigt snöfall"}
 
-    def __init__(self, panel_main, *args, **kwargs):
+    def __init__(self, panel_main, userSettings):
         self.panel_main = panel_main
 
-        self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 60
-        self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 600
-
-        self.places = kwargs['places'] if 'places' in kwargs else {'Skellefteå': {'lat': 64.75203, 'long': 20.95350}}
+        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 600
+        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 60
+        
+        self.places = userSettings['places'] if 'places' in userSettings else {'Skellefteå': {'lat': 64.75203, 'long': 20.95350}}
         self.index = 0
         self.place_names = []
         for place in self.places:
@@ -46,7 +46,8 @@ class ModuleWeather:
         self.font3 = wx.Font(pointSize=12, family=wx.FONTFAMILY_MODERN, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
 
         self.update_dataset()
-        self.update()
+        if self.status_ok is True:
+            self.update()
 
     def __str__(self):
         tmp_str = ''
@@ -62,7 +63,7 @@ class ModuleWeather:
         if (now - self.updated_data).total_seconds() > 600:
             self.update_dataset()
 
-        if (now - self.updated_graphics).total_seconds() > self.places[self.place_names[self.index]]['duration']:
+        if (now - self.updated_graphics).total_seconds() > self.places[self.place_names[self.index]]['duration'] and self.status_ok is True:
             self.index = self.index + 1 if self.index < len(self.places)-1 else 0
             self.update()
 

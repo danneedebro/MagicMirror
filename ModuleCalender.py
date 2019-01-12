@@ -25,7 +25,7 @@ class ModuleCalender:
     weekDays = {0: 'Måndag', 1: 'Tisdag', 2: 'Onsdag', 3: 'Torsdag', 4: 'Fredag', 5: 'Lördag', 6: 'Söndag'}
     timezone = pytz.timezone('Europe/Stockholm')
 
-    def __init__(self, panel_main, calendars_input, **kwargs):
+    def __init__(self, panel_main, userSettings):
         """
         Constructor. Creates a graphical module to display Google Calender data
 
@@ -35,14 +35,16 @@ class ModuleCalender:
             update_freq_data (int):     Time in seconds between fetching data from Google
 
         """
-
         self.panel_main = panel_main
-        self.caledars_input = calendars_input
 
-        self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 30
-        self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 60
-        self.days_to_plot_in_detail = kwargs['days_to_plot_in_detail'] if 'days_to_plot_in_detail' in kwargs else 7
-        self.days_to_plot_total = kwargs['days_to_plot_total'] if 'days_to_plot_total' in kwargs else 14
+        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 600
+        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 60
+
+        self.days_to_plot_in_detail = userSettings['daysToZoom'] if 'daysToZoom' in userSettings else 7
+        self.days_to_plot_total = userSettings['daysToPlot'] if 'daysToPlot' in userSettings else 14
+
+        calendars = userSettings['calendars'] if 'calendars' in userSettings else {'None': {'id': '', 'tokenFile': '', 'maxResults': 100, 'textColor': '', 'trackUpdates': True}}
+        credentials_filename = userSettings['credentialsFile'] if 'credentialsFile' in userSettings else ''
 
         self.repaint_completely = False   # Flag to fix problem with text residues. Causes som flicker so it's best to
                                           # only set this to flag True when dataset is refreshed
@@ -57,18 +59,18 @@ class ModuleCalender:
                              weight=wx.FONTWEIGHT_NORMAL)
         self.font4 = wx.Font(pointSize=9, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
                              weight=wx.FONTWEIGHT_NORMAL)
-        credentials_filename = 'GoogleCalender/credentials.json'
+        
         #token_filenames = ['GoogleCalender/Calender_shared.json', 'GoogleCalender/Calender_personal.json']
-        self.data = GoogleCalender.GoogleCalender.GoogleCalender(credentials_filename, calendars_input)
+        self.data = GoogleCalender.GoogleCalender.GoogleCalender(credentials_filename, calendars)
 
         self.update_dataset()
         self.update_graphics()
 
     def update_check(self):
-        if (datetime.now() - self.updated_data).total_seconds() > self.update_freq_data:
+        if (datetime.now() - self.updated_data).total_seconds() > self.updateFreqData:
             self.update_dataset()
 
-        if (datetime.now() - self.updated_graphics).total_seconds() > self.update_freq_graphics:
+        if (datetime.now() - self.updated_graphics).total_seconds() > self.updateFreqGraphics:
             self.update_graphics()
 
     def update_graphics(self):

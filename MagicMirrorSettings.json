@@ -1,0 +1,40 @@
+{
+    "placesList": {
+        "Göteborg": {"lat": 57.71084, "long": 11.99120},
+        "Skellefteå": {"lat": 64.75755, "long": 20.95051},
+        "Älvsbyn": {"lat": 65.67258, "long": 21.03356}
+    },
+    "googleCalendar":{
+        "updateFreqData": 60,
+        "updateFreqGraphics": 10,
+        "daysToZoom": 3,
+        "daysToPlot": 14,
+        "credentialsFile": "GoogleCalender/credentials.json",
+        "calendars": {
+            "daniel&Sofia - primär": {"id": "danielochsofia@gmail.com", "tokenFile": "GoogleCalender/Calender_shared.json",
+                "maxResults": 100, "textColor": "red", "trackUpdates": true},
+            "daniel - primär": {"id": "daniel.edebro@gmail.com", "tokenFile": "GoogleCalender/Calender_personal.json",
+                "maxResults": 100, "textColor": "blue", "trackUpdates": true},
+            "daniel - födelsedagar": {"id": "#contacts@group.v.calendar.google.com", "tokenFile": "GoogleCalender/Calender_personal.json",
+                    "maxResults": 100, "textColor": "yellow", "trackUpdates": false} 
+        }
+    },
+    "SMHI": {
+        "updateFreqData": 60,
+        "updateFreqGraphics": 10,
+        "places": {"Göteborg": {"duration": 10}}
+    },
+    "vastTrafik": {
+        "updateFreqData": 60,
+        "updateFreqGraphics": 10,
+        "tokenKey": "fYzDg69mhe3eytZLUGiTBrFl2cQa",
+        "tokenSecret": "0e163wTfFJAFteDgl607KhMkb2Ia",
+        "stop": "Svingeln",
+        "stopId": 9021014006480000        
+    },
+    "sunriseSunset": {
+        "updateFreqData": 60,
+        "updateFreqGraphics": 10,
+        "places": {"Göteborg": {}}
+    }
+}

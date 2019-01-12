@@ -12,18 +12,23 @@ import VastTrafik.VastTrafik
 
 
 class ModuleVastTrafik:
-    def __init__(self, mainPanel, *args, **kwargs):
+    def __init__(self, mainPanel, userSettings):
         self.mainPanel = mainPanel
 
-        self.update_freq_graphics = kwargs['update_freq_graphics'] if 'update_freq_graphics' in kwargs else 10
-        self.update_freq_data = kwargs['update_freq_data'] if 'update_freq_data' in kwargs else 60
+        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 60
+        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 10
 
-        font_size = kwargs['fontSize'] if 'fontSize' in kwargs else 12
+        font_size = 10
+
+        key = userSettings['tokenKey'] if 'tokenKey' in userSettings else ''
+        secret = userSettings['tokenSecret'] if 'tokenSecret' in userSettings else ''
+        stopId = userSettings['stopId'] if 'stopId' in userSettings else ''
+        
 
         self.updated_graphics = datetime.now()
         self.updated_data = datetime.now()
         self.font_departure = wx.FFont(font_size, wx.FONTFAMILY_MODERN,  flags=wx.FONTFLAG_STRIKETHROUGH)
-        self.data = VastTrafik.VastTrafik.VastTrafik('fYzDg69mhe3eytZLUGiTBrFl2cQa', '0e163wTfFJAFteDgl607KhMkb2Ia', 9021014006480000)
+        self.data = VastTrafik.VastTrafik.VastTrafik(key, secret, stopId)
         self.update()
 
     def update(self):

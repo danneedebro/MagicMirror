@@ -1,27 +1,33 @@
+# -*- coding: utf-8 -*-
 import wx
 from datetime import datetime
 import ModuleClock, ModuleVastTrafik, ModuleCalender, ModuleWeather, ModuleSunriseSunset
+import json
 # import os
 # import psutil
 
-# Google Calendar input
-input_dict = dict()
-input_dict['daniel&Sofia - primär'] = {'id': 'danielochsofia@gmail.com', 'tokenFile': 'GoogleCalender/Calender_shared.json',
-                                       'maxResults': 100, 'textColor': 'red', 'trackUpdates': True}
-input_dict['daniel - primär'] = {'id': 'daniel.edebro@gmail.com', 'tokenFile': 'GoogleCalender/Calender_personal.json',
-                                       'maxResults': 100, 'textColor': 'blue', 'trackUpdates': True}
-input_dict['daniel - födelsedagar'] = {'id': '#contacts@group.v.calendar.google.com',
-                                       'tokenFile': 'GoogleCalender/Calender_personal.json', 'maxResults': 100, 'textColor': 'yellow', 'trackUpdates': False}
+with open('MagicMirrorSettings.json', encoding='utf-8') as data_file:
+    userSettings = json.load(data_file)
 
+userInput_placesList = userSettings['placesList']
+userInput_googleCalendar = userSettings['googleCalendar']
+userInput_SMHI = userSettings['SMHI']
+userInput_vastTrafik = userSettings['vastTrafik']
+userInput_sunriseSunset = userSettings['sunriseSunset']
+
+# Append (but don't replace) missing information SMHI 'places' from 'placesList'
+for place in userInput_SMHI['places']:
+    if place in userInput_placesList:
+        userInput_SMHI['places'][place] = {**userInput_placesList[place], **userInput_SMHI['places'][place]}
+
+# Append (but don't replace) missing information sunrise 'places' from 'placesList'
+for place in userInput_sunriseSunset['places']:
+    if place in userInput_placesList:
+        userInput_sunriseSunset['places'][place] = {**userInput_placesList[place], **userInput_sunriseSunset['places'][place]}
 
 
 
 class Example(wx.Frame):
-    coordinates = {'Göteborg': {'lat': 57.71084, 'long': 11.99120, 'duration': 10},
-                   'Skellefteå': {'lat': 64.75755, 'long': 20.95051, 'duration': 10},
-                   'Älvsbyn': {'lat': 65.67258, 'long': 21.03356, 'duration': 2}}
-    currentCity = 'Göteborg'
-
     def __init__(self, parent, title):
         self.lastcall = datetime.now()
         super(Example, self).__init__(parent, title=title, size=(900, 750))
@@ -31,21 +37,16 @@ class Example(wx.Frame):
         self.clock = ModuleClock.ModuleClock(panel_clock)
 
         panel_vasttrafik = wx.Panel(self)
-        self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(panel_vasttrafik, fontSize=10,
-                                                            update_freq_graphics=10, update_freq_data=80)
+        self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(panel_vasttrafik, userInput_vastTrafik)
 
         panel_calender = wx.Panel(self)
-        self.calender = ModuleCalender.ModuleCalender(panel_calender, input_dict, days_to_plot_in_detail=3)
+        self.calender = ModuleCalender.ModuleCalender(panel_calender, userInput_googleCalendar)
 
-        cities = {'Göteborg'}
-        filtered = dict(zip(cities, [self.coordinates[k] for k in cities]))
         panel_weather = wx.Panel(self)
-        self.weather = ModuleWeather.ModuleWeather(panel_weather, places=filtered)
+        self.weather = ModuleWeather.ModuleWeather(panel_weather, userInput_SMHI)
 
         panel_sunset = wx.Panel(self)
-        self.sunset = ModuleSunriseSunset.ModuleSunriseSunset(panel_sunset,
-                                                              lat=self.coordinates[self.currentCity]['lat'],
-                                                              long=self.coordinates[self.currentCity]['long'])
+        self.sunset = ModuleSunriseSunset.ModuleSunriseSunset(panel_sunset, userInput_sunriseSunset)
 
         sizer_left = wx.BoxSizer(wx.VERTICAL)
         sizer_right = wx.BoxSizer(wx.VERTICAL)
@@ -76,10 +77,10 @@ class Example(wx.Frame):
     def tick(self, ev):
         now = datetime.now()
 
-        if (now - self.vasttrafik.updated_graphics).seconds >= self.vasttrafik.update_freq_graphics:
+        if (now - self.vasttrafik.updated_graphics).seconds >= self.vasttrafik.updateFreqGraphics:
             self.vasttrafik.update()
 
-        if (now - self.vasttrafik.updated_data).seconds >= self.vasttrafik.update_freq_data:
+        if (now - self.vasttrafik.updated_data).seconds >= self.vasttrafik.updateFreqData:
             self.vasttrafik.updateDataSet()
 
         self.calender.update_check()

@@ -13,15 +13,7 @@ SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 #
 # {'Tag': {'id': 'id', 'tokenFile':
 #
-#
-input_dict = {}
 
-input_dict['daniel&Sofia - primär'] = {'id': 'danielochsofia@gmail.com', 'tokenFile': 'Calender_shared.json',
-                                       'maxResults': 10}
-input_dict['daniel - primär'] = {'id': 'daniel.edebro@gmail.com', 'tokenFile': 'Calender_personal.json',
-                                       'maxResults': 10}
-input_dict['daniel - födelsedagar'] = {'id': '#contacts@group.v.calendar.google.com', 'tokenFile': 'Calender_personal.json',
-                                       'maxResults': 10}
 
 
 class GoogleCalender:
@@ -108,17 +100,7 @@ class GoogleCalender:
 
 
 def main():
-
-    newCal = GoogleCalender('credentials.json', input_dict)
-    """
-    for i in range(0,len(newCal.events)):
-        print(newCal.events[i]['summary'], ' startar', newCal.events[i]['start']['dateTime2'].hour)
-        if 'date' in newCal.events[i]['start']:
-            print(newCal.events[i]['summary'], ' startar', newCal.events[i]['start']['date'], '(heldagsaktivitet)')
-        else:
-            print(newCal.events[i]['summary'], ' startar', newCal.events[i]['start']['dateTime'])
-    """
-
+    pass
 
 
 if __name__ == '__main__':
