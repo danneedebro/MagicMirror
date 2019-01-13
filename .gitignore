@@ -1,0 +1,7 @@
+venv
+GoogleCalender/__pycache__
+VastTrafik/__pycache__
+__pycache__
+GoogleCalender/Calender_personal.json
+GoogleCalender/Calender_shared.json
+GoogleCalender/credentials.json
