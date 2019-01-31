@@ -9,6 +9,7 @@
 from datetime import datetime
 import wx
 import wx.lib.stattext as ST
+import pytz
 
 
 class ModuleClock:
@@ -35,13 +36,13 @@ class ModuleClock:
 
         panel = wx.Panel(self.panel_main)
         panel.SetBackgroundColour('Black')
-
-        now = datetime.now()
+        now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
+        #now = datetime.now()
         lbl_date = ST.GenStaticText(panel, label=now.strftime('%Y-%m-%d'), style=wx.ALIGN_LEFT)
         lbl_date.SetBackgroundColour('Black')
         lbl_date.SetForegroundColour('White')
 
-        lbl_week = ST.GenStaticText(panel, label=now.strftime('v. %W'), style=wx.ALIGN_RIGHT)
+        lbl_week = ST.GenStaticText(panel, label=now.strftime('v. %V'), style=wx.ALIGN_RIGHT)
         lbl_week.SetBackgroundColour('Black')
         lbl_week.SetForegroundColour('White')
         

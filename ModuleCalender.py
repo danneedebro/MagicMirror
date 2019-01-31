@@ -10,10 +10,6 @@ Graphic module for Google Calender data
 #   -----------------------------
 #   -----------------------------
 
-
-# FIXA så att man kan ge en dict med de kalendrar man vill se.
-# Ex  [{'Id':'danielochsofia@gmail.com', 'token-file':'token1.json', 'color': 'red', 'recurring': True
-
 from datetime import datetime
 from datetime import timedelta
 import wx
@@ -26,14 +22,10 @@ class ModuleCalender:
     timezone = pytz.timezone('Europe/Stockholm')
 
     def __init__(self, panel_main, userSettings):
-        """
-        Constructor. Creates a graphical module to display Google Calender data
+        """ Creates a graphical module to display Google Calender data
 
-        Args:
-            panel_main:                  wx.Panel object for the container/panel that holds the other widgets
-            update_freq_graphics (int): Time in seconds between updates of the graphical module
-            update_freq_data (int):     Time in seconds between fetching data from Google
-
+        :param panel_main: hello
+        :param userSettings:  sdd
         """
         self.panel_main = panel_main
 
@@ -51,13 +43,17 @@ class ModuleCalender:
 
         self.updated_graphics = datetime.now()
         self.updated_data = datetime.now()
-        self.font1 = wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
+        self.font1 = wx.Font(pointSize=16, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
                              weight=wx.FONTWEIGHT_NORMAL)
-        self.font2 = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
+        self.font2 = wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
                              weight=wx.FONTWEIGHT_NORMAL)
-        self.font3 = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.SLANT,
+        self.font3 = wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.SLANT,
                              weight=wx.FONTWEIGHT_NORMAL)
         self.font4 = wx.Font(pointSize=9, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
+                             weight=wx.FONTWEIGHT_NORMAL)
+        self.font5 = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
+                             weight=wx.FONTWEIGHT_NORMAL)
+        self.font6 = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
                              weight=wx.FONTWEIGHT_NORMAL)
         
         #token_filenames = ['GoogleCalender/Calender_shared.json', 'GoogleCalender/Calender_personal.json']
@@ -124,7 +120,7 @@ class ModuleCalender:
                     lbl_event.SetFont(self.font2)
                     lbl_time = wx.StaticText(panel, label=ModuleCalender.getEventString(event, print_weekday=False, only_time=True))
                     lbl_time.SetForegroundColour('Grey')
-                    lbl_time.SetFont(self.font2)
+                    lbl_time.SetFont(self.font5)
                     if start < now < end:
                         lbl_event.SetForegroundColour('White')
                         lbl_event.SetFont(self.font3)
@@ -161,7 +157,7 @@ class ModuleCalender:
             if curr_day <= start <= date_today + timedelta(days=self.days_to_plot_total):
                 lbl_event = wx.StaticText(panel, label=event['summary'])
                 lbl_event.SetForegroundColour('White')
-                lbl_event.SetFont(self.font2)
+                lbl_event.SetFont(self.font6)
                 lbl_time = wx.StaticText(panel, label=ModuleCalender.getEventString(event, only_time=True))
                 lbl_time.SetForegroundColour('Grey')
                 lbl_time.SetFont(self.font4)

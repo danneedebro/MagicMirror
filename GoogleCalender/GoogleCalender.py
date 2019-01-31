@@ -1,3 +1,29 @@
+"""
+Fetches events from one or more Google calendar
+
+Args:
+    credentials_file: (str)     A credentials file downloaded from Google APIs console
+    calendars: (dict)           An input dict containing information about the calendars to be read
+
+Output:
+    self.events[0]: (dict)      Sorted dict with ALL events from all calendars in 'calendars'
+    self.events[1]: (dict)      Sorted dict with UNIQUE/non-recurring events from all calendars in 'calendars'
+    self.events[2]: (dict)      Sorted dict by 'udated' keyword with UNIQUE/non-recurring events from all calendars in 'calendars'
+
+    self.status_ok: (bool)      True if ok
+
+calendars dict example
+{
+    'Calendar - primary': {'id': 'primary', 'tokenFile': '<filename>', 'maxResults': 100, 'trackUpdates': True},
+    'Calendar - birthdays': {'id': '#contacts@group.v.calendar.google.com', 'tokenFile': '<filename>', 'maxResults': 100, 'trackUpdates': False}
+}
+id:             ex: 'primary', 'john.smith@gmail.com'
+tokenFile:      ex: 'token1.json'
+trackUpdates:   If TRUE fetch events with orderBy='updated' for this calendar 
+
+"""
+
+
 from __future__ import print_function
 import datetime
 from googleapiclient.discovery import build
@@ -10,10 +36,9 @@ from datetime import timedelta
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
-#
-# {'Tag': {'id': 'id', 'tokenFile':
-#
 
+# Url where credentials file easily can be created
+url_help = 'https://developers.google.com/calendar/quickstart/python'
 
 
 class GoogleCalender:
@@ -22,9 +47,21 @@ class GoogleCalender:
 
         self.calendars_input = calendars_input
 
-        self.credentials_filename = credentials_filename
-        self.events = []
-        self.update()
+        # Check to see if credentials_filename exists
+        try:
+            fh = open(credentials_filename, 'r')
+            # Store configuration file values
+
+            self.credentials_filename = credentials_filename
+            self.events = []
+            self.update()
+
+        except FileNotFoundError:
+            print('Error: {} doesn\'t exist. Create one at Google APIs console or here: {}'.format(credentials_filename, url_help))
+            self.status_ok = False
+            return
+
+        
 
     def _getDateObject(self, str):
         # Input:    str    Datetime in the form YYYY-MM-DDTHH:MM:SS+XX:XX
@@ -99,9 +136,17 @@ class GoogleCalender:
         self.events[2] = sorted(self.events[2], key=itemgetter('updated'), reverse=True)
 
 
-def main():
-    pass
+def initiateAuthProcess():
+    print('This creates a json-file containing tokens to')
+    file_credentials = input('Credentials filename: ')
+    file_token = input('Desired token filename: ')
+    calendar = {'Calendar-tag':{'id': 'primary', "tokenFile": file_token, "maxResults": 1, "trackUpdates": False}}
+    GC = GoogleCalender(file_credentials, calendar)
+    if GC.status_ok is True:
+        print('Everything is OK')
+    else:
+        print('Something went wrong')
 
 
 if __name__ == '__main__':
-    main()
+    initiateAuthProcess()
