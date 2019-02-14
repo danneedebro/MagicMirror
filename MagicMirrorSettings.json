@@ -16,7 +16,10 @@
             "daniel - primär": {"id": "daniel.edebro@gmail.com", "tokenFile": "GoogleCalender/Calender_personal.json",
                 "maxResults": 100, "textColor": "blue", "trackUpdates": true},
             "daniel - födelsedagar": {"id": "#contacts@group.v.calendar.google.com", "tokenFile": "GoogleCalender/Calender_personal.json",
-                    "maxResults": 100, "textColor": "yellow", "trackUpdates": false} 
+                    "maxResults": 100, "textColor": "yellow", "trackUpdates": false},
+            "Svenska helgdagar": {"id": "sv.swedish#holiday@group.v.calendar.google.com", "tokenFile": "GoogleCalender/Calender_personal.json",
+                    "maxResults": 10, "textColor": "yellow", "trackUpdates": false}
+            
         }
     },
     "SMHI": {
