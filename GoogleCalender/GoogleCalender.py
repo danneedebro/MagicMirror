@@ -33,6 +33,7 @@ from operator import itemgetter
 
 from datetime import datetime
 from datetime import timedelta
+import pytz
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
@@ -42,6 +43,8 @@ url_help = 'https://developers.google.com/calendar/quickstart/python'
 
 
 class GoogleCalender:
+
+    timezone = pytz.timezone('Europe/Stockholm')
 
     def __init__(self, credentials_filename, calendars_input, *args, **kwargs):
 
@@ -77,6 +80,7 @@ class GoogleCalender:
             max_results = calendar['maxResults'] if 'maxResults' in calendar else 100
             calendar_id = calendar['id'] if 'id' in calendar else 'primary'
             track_updates = calendar['trackUpdates'] if 'trackUpdates' in calendar else True
+            days_ahead = calendar['daysAhead'] if 'daysAhead' in calendar else 0
 
             store = file.Storage(token_file)
             creds = store.get()
@@ -87,21 +91,33 @@ class GoogleCalender:
             service = build('calendar', 'v3', http=creds.authorize(Http()))
 
             # Call the Calendar API
-            now = datetime.now()
-            today = now.strftime('%Y-%m-%dT') + '00:00:00+01:00'
+            #now = datetime.now()
+            now = self.timezone.localize(datetime.now())
+            date_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            date_stop = date_today + timedelta(days=days_ahead)
+            strToday = date_today.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+            strDaysAhead = date_stop.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+            print(strDaysAhead)
+            
+            
 
             for j in range(0, 3):
                 print('Läser in {} från tokenFile={}, index={}'.format(calendar_id, token_file, j))
                 if j == 0:
-                    events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
+                    if days_ahead > 0:
+                        events_result = service.events().list(calendarId=calendar_id, timeMin=strToday, timeMax=strDaysAhead, maxResults=max_results,
+                                                          singleEvents=True, orderBy='startTime').execute()
+                    else:
+                        events_result = service.events().list(calendarId=calendar_id, timeMin=strToday, maxResults=max_results,
                                                           singleEvents=True, orderBy='startTime').execute()
                 elif j == 1:
-                    events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
+                    events_result = service.events().list(calendarId=calendar_id, timeMin=strToday, maxResults=max_results,
                                                           singleEvents=False).execute()
+                
                 elif j == 2:   
                     if track_updates is False:
                         break
-                    events_result = service.events().list(calendarId=calendar_id, timeMin=today, maxResults=max_results,
+                    events_result = service.events().list(calendarId=calendar_id, timeMin=strToday, maxResults=max_results,
                                                           singleEvents=False, orderBy='updated').execute()
 
                 events = events_result.get('items', [])

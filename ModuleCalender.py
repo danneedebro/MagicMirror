@@ -95,7 +95,8 @@ class ModuleCalender:
         sizer_main = wx.BoxSizer(wx.VERTICAL)
 
         # Fucked up way to get date_today with timezone info
-        now = datetime.now(self.timezone)
+        now = self.timezone.localize(datetime.now())
+        #now = datetime.now(self.timezone)
         date_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         # Print out the next X days in detail
