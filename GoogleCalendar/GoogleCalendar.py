@@ -58,18 +58,18 @@ class ModuleGoogleCalendar:
 
 
 class CalendarBoxes:
-    BoxWidth: int = 130
-    BoxHeight: int = 130
-    Weeks: int = 4
-    DataSet: dict = dict()
-    Events: dict = dict()
-    EventsLastUpdated: list = list()
+    BoxWidth = 130
+    BoxHeight = 130
+    Weeks = 4
+    DataSet = dict()
+    Events = list()
+    EventsLastUpdated = list()
 
     def __init__(self, MainPanel: wx.Panel):
         Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
 
         Today = Now.replace(hour=0, minute=0, second=0, microsecond=0)
-        ThisMonday = Today - timedelta(days=datetime.today().isoweekday() % 7 - 1)
+        ThisMonday = Today - timedelta(days=Today.isoweekday() - 1)
         
         self.MainPanel = MainPanel
         
@@ -133,7 +133,7 @@ class CalendarBoxes:
         
         sizerFlexGrid = wx.FlexGridSizer(self.Weeks, 7, 0, 0)
 
-        for day in self.DataSet:
+        for day in sorted(self.DataSet.keys()):
             IsToday = True if day == datetime.now().strftime('%Y-%m-%d') else False
             if self.DataSet[day]["date"] >= Today:
                 TextColor = "White"
@@ -141,8 +141,8 @@ class CalendarBoxes:
                 TextColor = "Gray"
 
             SubPanel = wx.Panel(panel, -1, style=wx.BORDER_RAISED if IsToday == True else wx.BORDER_STATIC)
-            
             SubPanel.SetForegroundColour("White")
+            SubPanel.SetBackgroundColour("Black")
             sizerCalendarBox = wx.BoxSizer(wx.VERTICAL)
             sizerCalendarBox.SetMinSize(size=(self.BoxWidth, self.BoxHeight))
 
@@ -179,7 +179,7 @@ class CalendarBoxes:
             
         sizerLastUpdatedList = wx.BoxSizer(wx.VERTICAL)
 
-        lblLastUpdated = ST.GenStaticText(self.MainPanel, label="Senast uppdaterad")
+        lblLastUpdated = ST.GenStaticText(panel, label="Senast uppdaterad")
         lblLastUpdated.SetForegroundColour("White")
         lblLastUpdated.SetBackgroundColour("Black")
         lblLastUpdated.SetFont(self.font2)
@@ -246,7 +246,8 @@ class GetGoogleEvents:
 
     def GetEvents(self):
         Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
-        ThisMonday = Now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=datetime.today().isoweekday() % 7 - 1)
+        Today = Now.replace(hour=0, minute=0, second=0, microsecond=0)
+        ThisMonday = Today - timedelta(days=Today.isoweekday() - 1)
         StartTime1 = ThisMonday.strftime('%Y-%m-%dT%H:%M:%S%z')
         StartTime2 = Now.replace(hour=0, minute=0, second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S%z')
 
