@@ -1,11 +1,3 @@
-#   -----------------------------
-#   |DATE         |         WEEK|
-#   -----------------------------
-#   |           TIME            |
-#   |                           |
-#   -----------------------------
-
-
 from datetime import datetime
 from datetime import timedelta
 import requests
@@ -104,7 +96,7 @@ class ModuleWeather:
         sizer_left = wx.BoxSizer(wx.VERTICAL)
         sizer_upper_left = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizer_upper_left.Add(lbl_temperature, 3, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 0)
+        sizer_upper_left.Add(lbl_temperature, 2, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 0)
         sizer_upper_left.Add(mypic, 2, wx.ALL, 0)
 
         # Data table for weather today

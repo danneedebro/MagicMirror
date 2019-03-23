@@ -9,15 +9,15 @@
         "updateFreqGraphics": 10,
         "daysToZoom": 3,
         "daysToPlot": 14,
-        "credentialsFile": "GoogleCalender/credentials.json",
+        "credentialsFile": "GoogleCalendar/credentials.json",
         "calendars": {
-            "daniel&Sofia - primär": {"id": "danielochsofia@gmail.com", "tokenFile": "GoogleCalender/Calender_shared.json",
+            "daniel&Sofia - primär": {"id": "danielochsofia@gmail.com", "tokenFile": "GoogleCalendar/Calender_shared.json",
                 "maxResults": 100, "textColor": "red", "trackUpdates": true},
-            "daniel - primär": {"id": "daniel.edebro@gmail.com", "tokenFile": "GoogleCalender/Calender_personal.json",
+            "daniel - primär": {"id": "daniel.edebro@gmail.com", "tokenFile": "GoogleCalendar/Calender_personal.json",
                 "maxResults": 100, "textColor": "blue", "trackUpdates": true},
-            "daniel - födelsedagar": {"id": "#contacts@group.v.calendar.google.com", "tokenFile": "GoogleCalender/Calender_personal.json",
+            "daniel - födelsedagar": {"id": "#contacts@group.v.calendar.google.com", "tokenFile": "GoogleCalendar/Calender_personal.json",
                     "maxResults": 100, "textColor": "yellow", "trackUpdates": false},
-            "Svenska helgdagar": {"id": "sv.swedish#holiday@group.v.calendar.google.com", "tokenFile": "GoogleCalender/Calender_personal.json",
+            "Svenska helgdagar": {"id": "sv.swedish#holiday@group.v.calendar.google.com", "tokenFile": "GoogleCalendar/Calender_personal.json",
                     "maxResults": 10, "textColor": "yellow", "trackUpdates": false}
             
         }

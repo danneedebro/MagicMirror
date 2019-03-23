@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import wx
 from datetime import datetime
-import ModuleClock, ModuleVastTrafik, ModuleCalender, ModuleWeather, ModuleSunriseSunset
+import ModuleClock, ModuleVastTrafik, ModuleWeather, ModuleSunriseSunset
+from GoogleCalendar.GoogleCalendar import ModuleGoogleCalendar
+
 import json
 # import os
 # import psutil
@@ -39,8 +41,8 @@ class Example(wx.Frame):
         panel_vasttrafik = wx.Panel(self)
         self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(panel_vasttrafik, userInput_vastTrafik)
 
-        panel_calender = wx.Panel(self)
-        self.calender = ModuleCalender.ModuleCalender(panel_calender, userInput_googleCalendar)
+        panel_calendar = wx.Panel(self)
+        self.calendar = ModuleGoogleCalendar(panel_calendar, userInput_googleCalendar)
 
         panel_weather = wx.Panel(self)
         self.weather = ModuleWeather.ModuleWeather(panel_weather, userInput_SMHI)
@@ -52,15 +54,15 @@ class Example(wx.Frame):
         sizer_right = wx.BoxSizer(wx.VERTICAL)
         sizer_main = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizer_left.Add(panel_clock, 0, wx.ALL, 5)
-        sizer_left.Add(panel_calender, 0, wx.ALL | wx.ALIGN_TOP, 5)
+        sizer_left.Add(panel_clock, 0, wx.LEFT, 15)
+        sizer_left.Add(panel_calendar, 0, wx.LEFT, 15)
 
-        sizer_right.Add(panel_weather, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_TOP, 5)
-        sizer_right.Add(panel_sunset, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_TOP, 5)
-        sizer_right.Add(panel_vasttrafik, 0, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_TOP, 5)
+        sizer_right.Add(panel_weather, 0, wx.ALIGN_RIGHT, 5)
+        sizer_right.Add(panel_sunset, 0, wx.ALIGN_RIGHT, 5)
+        sizer_right.Add(panel_vasttrafik, 0, wx.ALIGN_RIGHT, 5)
 
-        sizer_main.Add(sizer_left, 1, wx.ALL | wx.ALIGN_RIGHT, 5)
-        sizer_main.Add(sizer_right, 1, wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_TOP, 5)
+        sizer_main.Add(sizer_left, 1, wx.ALIGN_LEFT, 5)
+        sizer_main.Add(sizer_right, 1, wx.ALL, 5)
 
         self.SetSizer(sizer_main)
         self.Fit()
@@ -83,7 +85,7 @@ class Example(wx.Frame):
         if (now - self.vasttrafik.updated_data).seconds >= self.vasttrafik.updateFreqData:
             self.vasttrafik.updateDataSet()
 
-        self.calender.update_check()
+        self.calendar.UpdateCheck()
         self.weather.update_check()
         self.clock.update_check()
 
