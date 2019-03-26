@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import json
+
 import wx
 from datetime import datetime
 from datetime import timedelta
@@ -11,227 +13,239 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 from operator import itemgetter
 
-class ModuleGoogleCalendar:
-    def __init__(self, panel_main, userSettings):
-        self.panel_main = panel_main
 
-        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 600
-        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 60
+class ModuleCalendar:
+    NumberOfWeeks = 5
+    CalendarData = dict()
+    UpdateFrequencyData = 60
+    UpdateFrequencyGraphics = 10
+    Events = dict()
+    Events
 
-        self.days_to_plot_in_detail = userSettings['daysToZoom'] if 'daysToZoom' in userSettings else 7
-        self.days_to_plot_total = userSettings['daysToPlot'] if 'daysToPlot' in userSettings else 14
+    def __init__(self, Parent, CalendarSettings):
+        self.PanelMain = Parent
 
-        self.calendars = userSettings['calendars'] if 'calendars' in userSettings else {'None': {'id': '', 'tokenFile': '', 'maxResults': 100, 'textColor': '', 'trackUpdates': True}}
-        self.credentials_filename = userSettings['credentialsFile'] if 'credentialsFile' in userSettings else ''
+        self.UpdateFrequencyData = CalendarSettings["updateFreqData"] if "updateFreqData" in CalendarSettings else self.UpdateFrequencyData
+        self.UpdateFrequencyGraphics = CalendarSettings["updateFreqGraphics"] if "updateFreqGraphics" in CalendarSettings else self.UpdateFrequencyGraphics
+        self.NumberOfWeeks = CalendarSettings["weeksToPlot"] if "weeksToPlot" in CalendarSettings else self.NumberOfWeeks
 
-        self.repaint_completely = False   # Flag to fix problem with text residues. Causes som flicker so it's best to
-                                          # only set this to flag True when dataset is refreshed
-
-        self.Update()
+        self.LastUpdateData = datetime.now() - timedelta(seconds=self.UpdateFrequencyData)
+        self.Events = GetGoogleEvents(CalendarSettings)
+        self.UpdateData()
+        self.LastUpdateGraphics = datetime.now()
+        self.Draw()
 
     def UpdateCheck(self):
-        if (datetime.now() - self.updated_data).total_seconds() > self.updateFreqData:
-            self.Update()
+        if (datetime.now() - self.LastUpdateData).total_seconds() > self.UpdateFrequencyData:
+            self.UpdateData()
 
-    def Update(self):
-        """Fetches events from Google and redraws events to Calendar"""
-        self.updated_data = datetime.now()
+        if (datetime.now() - self.LastUpdateGraphics).total_seconds() > self.UpdateFrequencyGraphics:
+            self.Draw()
 
-        #self.EventsByDate = 
-        self.data = GetGoogleEvents(self.credentials_filename, self.calendars)
-
-        self.Calendar = CalendarBoxes(self.panel_main)
-        for event in self.data.EventsSortedByDate:
-            self.Calendar.AddEvent(event['summary'], event['EventStart'], event['EventEnd'])
-
-        cnt = 0
-        for event in self.data.EventsSortedByUpdated:
-            cnt += 1
-            if cnt > 10:
-                break
-            self.Calendar.AddEventLastUpdated(event['summary'], event['EventStart'], event['EventEnd'])
-
-
-        self.Calendar.Draw()
-
-
-
-
-class CalendarBoxes:
-    BoxWidth = 130
-    BoxHeight = 130
-    Weeks = 4
-    DataSet = dict()
-    Events = list()
-    EventsLastUpdated = list()
-
-    def __init__(self, MainPanel: wx.Panel):
-        Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
-
-        Today = Now.replace(hour=0, minute=0, second=0, microsecond=0)
-        ThisMonday = Today - timedelta(days=Today.isoweekday() - 1)
-        
-        self.MainPanel = MainPanel
-        
-        for WeekInd in range(self.Weeks):
-            for WeekDay in range(7):
-                CurrDate = ThisMonday + timedelta(days=WeekInd*7 + WeekDay)
-                self.DataSet[CurrDate.strftime('%Y-%m-%d')] = {"events": [], "date": CurrDate}
-
-        self.EventsLastUpdated = []
-
-        self.FontHeader = wx.Font(pointSize=16, family=wx.DECORATIVE, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
-        self.FontHeader2 = wx.Font(pointSize=13, family=wx.DECORATIVE, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
-        self.font2 = wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
-
-
-    def AddEvent(self, EventSummary: str, EventStart: datetime, EventEnd: datetime):
-        """
-        Adds an event to DataSet
-
-        Input:
-            EventSummary (string) = Title/ Summary of event
-            EventStart (datetime) = Start time of event
-            EventEnd (datetime) = End time of event
-        """
-        for i in range((EventEnd - EventStart).days+1):
-            CurrDate = EventStart + timedelta(days=i)
-            CurrDay = CurrDate.strftime('%Y-%m-%d')
-            if CurrDay in self.DataSet:
-                if EventStart < self.DataSet[CurrDay]["date"]:
-                    TimeStart = self.DataSet[CurrDay]["date"]
-                else:
-                    TimeStart = EventStart
-
-                if EventEnd > self.DataSet[CurrDay]["date"] + timedelta(days=1):
-                    TimeEnd = self.DataSet[CurrDay]["date"] + timedelta(days=1)
-                else:
-                    TimeEnd = EventEnd
-
-                self.DataSet[CurrDate.strftime('%Y-%m-%d')]["events"].append({"summary": EventSummary, "start": TimeStart, "end": TimeEnd})
-
-    def AddEventLastUpdated(self, EventSummary: str, EventStart: datetime, EventEnd: datetime):
-        self.EventsLastUpdated.append({"summary": EventSummary, "start": EventStart, "end": EventEnd})    
+    def UpdateData(self):
+        self.LastUpdateData = datetime.now()
+        self.Events.GetEvents()
 
     def Draw(self):
-        """
-        Draws a Calandar inside self.MainPanel
-        """
-        Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
-        Today = Now.replace(hour=0, minute=0, second=0, microsecond=0)
-
-        self.MainPanel.Freeze()
+        self.LastUpdateGraphics = datetime.now()
+        self.PanelMain.Freeze()
 
         # Delete all objects in main container for this module
-        for myobj in self.MainPanel.GetChildren():
+        for myobj in self.PanelMain.GetChildren():
             myobj.DestroyChildren()
             myobj.Destroy()
 
-        panel = wx.Panel(self.MainPanel)
+        panel = wx.Panel(self.PanelMain)
+        #panel.SetBackgroundColour("Black")
 
-        sizerMain = wx.BoxSizer(wx.VERTICAL)
-        
-        sizerFlexGrid = wx.FlexGridSizer(self.Weeks, 7, 0, 0)
+        SizerMain = wx.BoxSizer(wx.VERTICAL)
+        SizerFlexGrid = wx.FlexGridSizer(self.NumberOfWeeks+1, 7, 0, 0)
 
-        for day in sorted(self.DataSet.keys()):
-            IsToday = True if day == datetime.now().strftime('%Y-%m-%d') else False
-            if self.DataSet[day]["date"] >= Today:
-                TextColor = "White"
-            else:
-                TextColor = "Gray"
 
-            SubPanel = wx.Panel(panel, -1, style=wx.BORDER_RAISED if IsToday == True else wx.BORDER_STATIC)
-            SubPanel.SetForegroundColour("White")
-            SubPanel.SetBackgroundColour("Black")
-            sizerCalendarBox = wx.BoxSizer(wx.VERTICAL)
-            sizerCalendarBox.SetMinSize(size=(self.BoxWidth, self.BoxHeight))
+        Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
+        Today = Now.replace(hour=0, minute=0, second=0, microsecond=0)
+        ThisMonday = Today - timedelta(days=Today.isoweekday() - 1)
 
-            sizerHeader = wx.BoxSizer(wx.HORIZONTAL)
-            sizerHeader.SetMinSize(size=(self.BoxWidth, -1))
-            Days = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"]
-            Months = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+        # Construct an empty 'CalendarData' dict
+        self.CalendarData.clear()
+        for Day in range(self.NumberOfWeeks*7):
+            CurrDate = ThisMonday + timedelta(days=Day)
+            self.CalendarData[CurrDate.strftime('%Y-%m-%d')] = {"Events": [], "Date": CurrDate}
 
-            # i = 0  is label containing the day, i = 1 is label containing date
-            for i in range(2):
-                lblNewString = Days[self.DataSet[day]["date"].weekday()] if i == 0 else str(self.DataSet[day]["date"].day) + " " + Months[self.DataSet[day]["date"].month-1]
-                lblNew = ST.GenStaticText(SubPanel, label=lblNewString, style=wx.ALIGN_LEFT if i == 0 else wx.ALIGN_RIGHT)
-                lblNew.SetForegroundColour(TextColor)
-                lblNew.SetBackgroundColour("Black")
-                lblNew.SetFont(self.FontHeader if i == 0 else self.FontHeader2)
-                sizerHeader.Add(lblNew, 1, wx.ALIGN_BOTTOM)
+        # Populate 'CalendarData' with events
+        for event in self.Events.ByDate:
+            self.AddEvent(event["Summary"], event["EventStart"], event["EventEnd"])
 
-            sizerCalendarBox.Add(sizerHeader, 0, wx.LEFT | wx.RIGHT, 5)   # Proportion 0 to stack tight
+        # Add a header with weeksdays on blue background    
+        for Day in range(7):
+            NewBox = MyBox(panel, ThisMonday + timedelta(days=Day), True, BackgroundColour="Blue")
+            NewBox.SetBackgroundColour("Blue")
+            SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
 
-            # Loop through days events and and them to sizerRight
-            for event in self.DataSet[day]["events"]:
-                sizerEvent = wx.BoxSizer(wx.VERTICAL)
-                for i in range(2):
-                    lblNewString = event["summary"] if i == 1 else "{}-{}".format(event["start"].strftime('%H:%M'), event["end"].strftime('%H:%M'))
-                    lblNew = ST.GenStaticText(SubPanel, label=lblNewString)
-                    lblNew.SetForegroundColour(TextColor if i == 1 else "Gray")
-                    lblNew.SetBackgroundColour("Black")
-                    sizerCalendarBox.Add(lblNew, 0, wx.LEFT, 5)    # Proportion 0 to stack tight
+        # Loop through 'CalendarData' and create a box for each day
+        for Day in sorted(self.CalendarData.keys()):
+            CurrDate = self.CalendarData[Day]["Date"]
 
-            sizerFlexGrid.Add(SubPanel, 1, wx.EXPAND)
-            SubPanel.SetSizer(sizerCalendarBox)
-            SubPanel.Fit()
-            #sizerCalendarBox.Fit(SubPanel)   # Fit to sizer's min size
+            NewBox = MyBox(panel, CurrDate, False)
+            if CurrDate == Today:
+                NewBox.BorderColour = "Red"
+                NewBox.BorderWidth = 2
             
-        sizerLastUpdatedList = wx.BoxSizer(wx.VERTICAL)
+            for event in self.CalendarData[Day]["Events"]:
+                NewBox.PrintEvent(event["Summary"], event["EventStart"], event["EventEnd"])
+                
+            SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
 
-        lblLastUpdated = ST.GenStaticText(panel, label="Senast uppdaterad")
-        lblLastUpdated.SetForegroundColour("White")
-        lblLastUpdated.SetBackgroundColour("Black")
-        lblLastUpdated.SetFont(self.font2)
-        sizerLastUpdatedList.Add(lblLastUpdated)
+        SizerMain.Add(SizerFlexGrid)
 
-        sizerMain.Add(sizerFlexGrid)
-        sizerMain.Add(sizerLastUpdatedList)
+        # Add a List with last updated events
+        lblNew = ST.GenStaticText(panel, -1, label="Senast uppdaterade")
+        lblNew.SetForegroundColour("White")
+        lblNew.SetBackgroundColour("Black")
+        lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+        SizerMain.Add(lblNew, 0, wx.ALL, 5)
 
-        for event in self.EventsLastUpdated:
-            sizerEvent = wx.BoxSizer(wx.HORIZONTAL)
+        cnt = 0
+        for event in self.Events.ByUpdated:
+            if 0 < (Now - event["EventUpdated"]).days > 30:
+                continue
+            cnt += 1
+            if cnt > 10:
+                break
+            SizerEvent = wx.BoxSizer(wx.HORIZONTAL)
             for i in range(2):
-                lblNewString = event['summary'] if i == 0 else "{} {} {}, {}".format(Days[event["start"].weekday()], event['start'].day, Months[event["start"].month-1], event["start"].strftime('%H:%M'))
-                lblNew = ST.GenStaticText(panel, label=lblNewString)
+                lblNewString = event["Summary"] if i == 0 else GetEventDate(event["EventStart"], event["EventEnd"])
+                lblNew = ST.GenStaticText(panel, -1, label=lblNewString)
+                lblNew.SetBackgroundColour("Black")
                 lblNew.SetForegroundColour("White" if i == 0 else "Gray")
-                lblNew.SetBackgroundColour("Black")
-                sizerEvent.Add(lblNew, 0, wx.LEFT, 3)
-            
-            sizerMain.Add(sizerEvent)
+                SizerEvent.Add(lblNew, 0, wx.LEFT, 7)
 
-        panel.SetSizer(sizerMain)
-        panel.Fit()
-        #sizerMain.SetSizeHints(self.MainPanel)
+            SizerMain.Add(SizerEvent)
+
+        panel.SetSizerAndFit(SizerMain)
+
+        self.PanelMain.Thaw()
+
+    def AddEvent(self, EventSummary, EventStart, EventEnd):
+        for i in range((EventEnd - EventStart).days+1):
+            CurrDate = EventStart + timedelta(days=i)
+            CurrDateStr = CurrDate.strftime('%Y-%m-%d')
+            if CurrDateStr in self.CalendarData:
+                if EventStart < self.CalendarData[CurrDateStr]["Date"]:
+                    TimeStart = self.CalendarData[CurrDateStr]["Date"]
+                else:
+                    TimeStart = EventStart
+
+                if EventEnd > self.CalendarData[CurrDateStr]["Date"] + timedelta(days=1):
+                    TimeEnd = self.CalendarData[CurrDateStr]["Date"] + timedelta(days=1)
+                else:
+                    TimeEnd = EventEnd
+
+                self.CalendarData[CurrDateStr]["Events"].append({"Summary": EventSummary, "EventStart": TimeStart, "EventEnd": TimeEnd})
+
+
+
+
+class MyBox(wx.Panel):
+    BoxWidth = 130
+    BoxHeight = 150
+    BorderWidth = 1
+    BorderRadius = 0
+    BorderColour = "Gray"
+    BackgroundColour = "Black"
+    CurrDay = 1
+    isHeader = False
+    def __init__(self, Parent, CurrentDate, isHeader, **kwargs):
+
+        self.BackgroundColour = kwargs["BackgroundColour"] if "BackgroundColour" in kwargs else self.BackgroundColour
+
+        self.CurrentDate = CurrentDate
+
+        if isHeader == True:
+            self.BoxHeight = -1
+            self.isHeader = True
+
+
+        wx.Panel.__init__(self, Parent, -1)
+        self.SetBackgroundColour("Black")
+        self.SizerMain = wx.BoxSizer(wx.VERTICAL)
+        self.SizerMain.SetMinSize(size=(self.BoxWidth, self.BoxHeight))
+
+        if isHeader == True:
+            WeekDaysInSwedish = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag", "Lördag", "Söndag"]
+            lblNew = ST.GenStaticText(self, -1, label=WeekDaysInSwedish[self.CurrentDate.isoweekday()-1], style=wx.ALIGN_CENTER)
+
+            lblNew.SetForegroundColour("White")
+            lblNew.SetBackgroundColour(self.BackgroundColour)
+            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            self.SizerMain.Add(lblNew, 0, wx.EXPAND|wx.ALL, 5)
+
+        self.SetSizer(self.SizerMain)
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+
+    def PrintEvent(self, EventSummary, EventStart, EventEnd):
+
+        for i in range(2):
+            if i == 0:
+                lblNewString = "{}-{}".format(EventStart.strftime('%H:%M'),EventEnd.strftime('%H:%M'))
+            else:
+                if len(EventSummary) > 15:
+                    lblNewString = EventSummary[:15] + "\n" + EventSummary[15:]
+                else:
+                    lblNewString = EventSummary
+
+            lblNew = ST.GenStaticText(self, -1, label=lblNewString)
+            lblNew.SetForegroundColour("Gray" if i == 0 else "White")
+            lblNew.SetBackgroundColour("Black")
+            lblNew.SetFont(wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            if i == 0:
+                self.SizerMain.Add(lblNew, 0, wx.TOP|wx.LEFT|wx.RIGHT, 5)
+            else:
+                self.SizerMain.Add(lblNew, 0, wx.BOTTOM|wx.LEFT|wx.RIGHT, 5)
+
+    def OnPaint(self, event):
+        """set up the device context (DC) for painting"""
+        dc = wx.PaintDC(self)
+
+        #blue non-filled rectangle
+        dc.SetPen(wx.Pen(self.BorderColour, width=self.BorderWidth))
+        dc.SetBrush(wx.Brush("black", wx.TRANSPARENT)) #set brush transparent for non-filled rectangle
+        SizerSize = self.SizerMain.GetSize()
+        dc.DrawRoundedRectangle(0,0, SizerSize.GetWidth(), SizerSize.GetHeight(), self.BorderRadius)
         
-        self.MainPanel.Thaw()
-        #self.MainPanel.Fit()
-        
-
-
-
-        
-      
+        if self.isHeader is False:
+            dc.SetFont(wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            dc.SetTextForeground((255,255,0))
+            TextSize = dc.GetTextExtent(str(self.CurrentDate.day))
+            TextSizeMax = dc.GetTextExtent("30")
+            dc.DrawRectangle(SizerSize.GetWidth() - TextSizeMax.GetWidth() - 5, 0, TextSizeMax.GetWidth() + 5, TextSizeMax.GetHeight()+5)
+            dc.DrawText(str(self.CurrentDate.day), SizerSize.GetWidth()-TextSize.GetWidth()-3, 3)
 
 
 class GetGoogleEvents:
+    """
+    Fetches events from Google Calendars and stores them in two lists, 
+        1) self.ByDate      - Events sorted by event start date
+        2) self.ByUpdated   - Events sorted by event updated date
+    
+    """
     # If modifying these scopes, delete the file token.json.
     SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 
     # Url where credentials file easily can be created
     url_help = 'https://developers.google.com/calendar/quickstart/python'
 
-    def __init__(self, credentials_filename, calendars_input, *args, **kwargs):
+    def __init__(self, CalendarSettings):
 
-        self.calendars_input = calendars_input
+        self.CalendarSettings = CalendarSettings
+        self.credentials_filename = CalendarSettings['credentialsFile'] if 'credentialsFile' in CalendarSettings else ''
+
+        self.ByDate = []
+        self.ByUpdated = []
 
         # Check to see if credentials_filename exists
         try:
-            fh = open(credentials_filename, 'r')
-            # Store configuration file values
-
-            self.credentials_filename = credentials_filename
-            self.Events = []
-            self.GetEvents()
+            fh = open(self.credentials_filename, 'r')
 
         except FileNotFoundError:
             print('Error: {} doesn\'t exist. Create one at Google APIs console or here: {}'.format(credentials_filename, self.url_help))
@@ -251,10 +265,10 @@ class GetGoogleEvents:
         StartTime1 = ThisMonday.strftime('%Y-%m-%dT%H:%M:%S%z')
         StartTime2 = Now.replace(hour=0, minute=0, second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S%z')
 
-        self.EventsSortedByDate = []
-        self.EventsSortedByUpdated = []
+        self.ByDate.clear()
+        self.ByUpdated.clear()
 
-        for calendar_tag, calendar in self.calendars_input.items():
+        for calendar_tag, calendar in self.CalendarSettings["calendars"].items():
             token_file = calendar['tokenFile']
             max_results = calendar['maxResults'] if 'maxResults' in calendar else 100
             calendar_id = calendar['id'] if 'id' in calendar else 'primary'
@@ -270,14 +284,20 @@ class GetGoogleEvents:
 
             # Call the Calendar API
             for i in range(2):
+                print("Läser in kalender {}, index={}".format(calendar_id, i))
                 if i == 0:
                     NewEvents = service.events().list(calendarId=calendar_id, timeMin=StartTime1, maxResults=max_results,
                                                       singleEvents=True, orderBy='startTime').execute()
                 elif i == 1:
                     if track_updates is False:
+                        print("   breaking")
                         break
                     NewEvents = service.events().list(calendarId=calendar_id, timeMin=StartTime2, maxResults=max_results,
                                                       singleEvents=False, orderBy='updated').execute()
+                    print("Hello")
+
+                if calendar_id == "daniel.edebro@gmail.com":
+                        print("")
 
                 events = NewEvents.get('items', [])
 
@@ -286,32 +306,36 @@ class GetGoogleEvents:
 
                 # Loop through events and add a dateTime object in current event called 'dateTimeStart' and 'dateTimeEnd'
                 for event in events:
+                    EventSummary = event["summary"] if "summary" in event else "(Ingen titel)"
+                    EventUpdated = datetime.strptime(event['updated'], '%Y-%m-%dT%H:%M:%S.%f%z')
+
                     if 'date' in event['start']:    # if whole-day activity
-                        event['EventStart'] = pytz.timezone('Europe/Stockholm').localize(datetime.strptime(event['start']['date'], '%Y-%m-%d'))
-                        event['EventEnd'] = pytz.timezone('Europe/Stockholm').localize(datetime.strptime(event['end']['date'], '%Y-%m-%d')) - timedelta(minutes=1)
-                        event['start']['dateTime2'] = datetime.strptime(event['start']['date'] + ' +0100', '%Y-%m-%d %z')
-                        #event['end']['dateTime2'] = datetime.strptime(event['end']['date']+ ' +0100', '%Y-%m-%d %z')
-                        event['dateTimeStart'] = event['start']['dateTime2'].strftime('%Y-%m-%d %H:%M:%S')
+                        EventStart = pytz.timezone('Europe/Stockholm').localize(datetime.strptime(event['start']['date'], '%Y-%m-%d'))
+                        EventEnd = pytz.timezone('Europe/Stockholm').localize(datetime.strptime(event['end']['date'], '%Y-%m-%d')) - timedelta(minutes=1)
                     elif 'dateTime' in event['start']:   # If
-                        event['EventStart'] = self._getDateObject(event['start']['dateTime'])
-                        event['EventEnd'] = self._getDateObject(event['end']['dateTime'])
-                        event['start']['dateTime2'] = self._getDateObject(event['start']['dateTime'])
-                        event['end']['dateTime2'] = self._getDateObject(event['end']['dateTime'])
-                        event['dateTimeStart'] = event['start']['dateTime2'].strftime('%Y-%m-%d %H:%M:%S')
+                        EventStart = self._getDateObject(event['start']['dateTime'])
+                        EventEnd = self._getDateObject(event['end']['dateTime'])
 
-                for event in events:
-                    if 'summary' not in event:
-                        event['summary'] = '(Ingen titel)'
                     if i == 0:
-                        self.EventsSortedByDate.append(event)
+                        self.ByDate.append({"Summary": EventSummary, "EventStart": EventStart, "EventEnd": EventEnd, "EventUpdated": EventUpdated, "CalendarId": calendar_id})
                     else:
-                        self.EventsSortedByUpdated.append(event)
-
-
-
+                        self.ByUpdated.append({"Summary": EventSummary, "EventStart": EventStart, "EventEnd": EventEnd, "EventUpdated": EventUpdated, "CalendarId": calendar_id})
 
         # Sort list
         self.status_ok = True
 
-        self.EventsSortedByDate = sorted(self.EventsSortedByDate, key=itemgetter('dateTimeStart'), reverse=False)
-        self.EventsSortedByUpdated = sorted(self.EventsSortedByUpdated, key=itemgetter('updated'), reverse=True)
+        self.ByDate = sorted(self.ByDate, key=itemgetter('EventStart'))
+        self.ByUpdated = sorted(self.ByUpdated, key=itemgetter('EventUpdated'), reverse=True)
+        print("Hello")
+
+
+
+
+# Static functions
+def GetEventDate(EventStart, EventEnd):
+    WeekDaysShort = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"]
+    MonthsShort = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+    if EventStart.day == EventEnd.day:
+        return "{} {} {} {}-{}".format(WeekDaysShort[EventStart.isoweekday()-1], EventStart.day, MonthsShort[EventStart.month-1], EventStart.strftime("%H:%M"), EventEnd.strftime("%H:%M"))
+    else:
+        return "{} {} {} {}-{}".format(WeekDaysShort[EventStart.isoweekday()-1], EventStart.day, MonthsShort[EventStart.month-1], EventStart.strftime("%H:%M"), EventEnd.strftime("%H:%M"))

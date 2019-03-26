@@ -8,7 +8,7 @@
         "updateFreqData": 60,
         "updateFreqGraphics": 10,
         "daysToZoom": 3,
-        "daysToPlot": 14,
+        "weeksToPlot": 4,
         "credentialsFile": "GoogleCalendar/credentials.json",
         "calendars": {
             "daniel&Sofia - primär": {"id": "danielochsofia@gmail.com", "tokenFile": "GoogleCalendar/Calender_shared.json",

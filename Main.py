@@ -2,7 +2,7 @@
 import wx
 from datetime import datetime
 import ModuleClock, ModuleVastTrafik, ModuleWeather, ModuleSunriseSunset
-from GoogleCalendar.GoogleCalendar import ModuleGoogleCalendar
+from GoogleCalendar.GoogleCalendar import ModuleCalendar
 
 import json
 # import os
@@ -42,7 +42,7 @@ class Example(wx.Frame):
         self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(panel_vasttrafik, userInput_vastTrafik)
 
         panel_calendar = wx.Panel(self)
-        self.calendar = ModuleGoogleCalendar(panel_calendar, userInput_googleCalendar)
+        self.calendar = ModuleCalendar(panel_calendar, userInput_googleCalendar)
 
         panel_weather = wx.Panel(self)
         self.weather = ModuleWeather.ModuleWeather(panel_weather, userInput_SMHI)
