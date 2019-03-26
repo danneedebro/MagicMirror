@@ -56,7 +56,7 @@ class ModuleCalendar:
             myobj.Destroy()
 
         panel = wx.Panel(self.PanelMain)
-        #panel.SetBackgroundColour("Black")
+        panel.SetBackgroundColour("Black")
 
         SizerMain = wx.BoxSizer(wx.VERTICAL)
         SizerFlexGrid = wx.FlexGridSizer(self.NumberOfWeeks+1, 7, 0, 0)
@@ -307,7 +307,7 @@ class GetGoogleEvents:
                 # Loop through events and add a dateTime object in current event called 'dateTimeStart' and 'dateTimeEnd'
                 for event in events:
                     EventSummary = event["summary"] if "summary" in event else "(Ingen titel)"
-                    EventUpdated = datetime.strptime(event['updated'], '%Y-%m-%dT%H:%M:%S.%f%z')
+                    EventUpdated = datetime.strptime(event['updated'][:-1]+"+0000", '%Y-%m-%dT%H:%M:%S.%f%z')
 
                     if 'date' in event['start']:    # if whole-day activity
                         EventStart = pytz.timezone('Europe/Stockholm').localize(datetime.strptime(event['start']['date'], '%Y-%m-%d'))
