@@ -2,8 +2,10 @@ from datetime import datetime
 from datetime import timedelta
 import requests
 import wx
+import wx.lib.stattext as ST
 import pytz
 
+import json   # REMOVE
 
 class ModuleWeather:
     url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'
@@ -15,161 +17,158 @@ class ModuleWeather:
                     20: "Kraftigt regn", 21: "Åska", 22: "Lätt snöblandat regn", 23: "Snöblandat regn",
                     24: "Kraftigt snöblandat regn", 25: "Lätt snöfall", 26: "Snöfall", 27: "Ymnigt snöfall"}
 
-    def __init__(self, panel_main, userSettings):
-        self.panel_main = panel_main
+    def __init__(self, Parent, userSettings):
+        self.PanelMain = Parent
 
         self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 600
         self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 60
         
         self.places = userSettings['places'] if 'places' in userSettings else {'Skellefteå': {'lat': 64.75203, 'long': 20.95350}}
-        self.index = 0
-        self.place_names = []
-        for place in self.places:
-            self.place_names.append(place)
-        self.data = [None]*len(self.places)
+        
+        self.Weather = GetSMHIWeather(userSettings)
+        self.UpdateData()
+        
+        self.UpdateGraphics()
+        
 
-        self.updated_graphics = datetime.now()
-        self.updated_data = datetime.now()
-
-        self.status_ok = False
-
-        self.font1 = wx.Font(pointSize=54, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
-        self.font2 = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
-        self.font3 = wx.Font(pointSize=12, family=wx.FONTFAMILY_MODERN, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL)
-
-        self.update_dataset()
-        if self.status_ok is True:
-            self.update()
-
-    def __str__(self):
-        tmp_str = ''
-        for myobj in self.panel_main.GetChildren():
-            tmp_str += str(myobj) + '\n'
-            for subobj in myobj.GetChildren():
-                tmp_str += '   ' + str(subobj) + '\n'
-
-        return tmp_str
-
-    def update_check(self):
+    def UpdateCheck(self):
         now = datetime.now()
-        if (now - self.updated_data).total_seconds() > 600:
-            self.update_dataset()
+        if (now - self.LastUpdateData).total_seconds() > 600:
+            self.UpdateData()
 
-        if (now - self.updated_graphics).total_seconds() > self.places[self.place_names[self.index]]['duration'] and self.status_ok is True:
-            self.index = self.index + 1 if self.index < len(self.places)-1 else 0
-            self.update()
+        if (now - self.LastUpdateGraphics).total_seconds() > 60:
+            self.UpdateGraphics()
 
-    def update(self):
-        now = datetime.now()
-        self.updated_graphics = now
+    def UpdateData(self):
+        self.LastUpdateData = datetime.now()
+        self.Weather.GetWeather()
 
-        self.panel_main.Freeze()
+
+    def UpdateGraphics(self):
+        self.LastUpdateGraphics = datetime.now()
+
+        self.PanelMain.Freeze()
 
         # Delete all objects in main container for this module
-        for myobj in self.panel_main.GetChildren():
+        for myobj in self.PanelMain.GetChildren():
             myobj.Destroy()
 
         # Create a sub panel to main panel that can be deleted next update
-        panel = wx.Panel(self.panel_main)
+        panel = wx.Panel(self.PanelMain)
         panel.SetBackgroundColour('Black')
-        panel.Freeze()  # Freeze to avoid flickering
 
-        now = datetime.now(self.timezone)
+        Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
 
-        lbl_city = wx.StaticText(panel, label=self.place_names[self.index])
-        lbl_city.SetForegroundColour('White')
-        lbl_city.SetFont(self.font2)
+        sizerMain = wx.BoxSizer(wx.VERTICAL)
+        weatherTable = WeatherTable(panel)
 
-        temp_val = self.getParameter(self.data[self.index]['timeSeries'][0], 't')
-        lbl_temperature = wx.StaticText(panel, label='{:>5}{}'.format(str(temp_val), chr(176)))
-        lbl_temperature.SetBackgroundColour('Black')
-        lbl_temperature.SetForegroundColour('White')
-        lbl_temperature.SetFont(self.font1)
+        weatherCurr = self.Weather.GetMedianWeather("Göteborg", Now, 1)
+        symb = weatherCurr["Wsymb2"]["values"][0]
+        Tmin, Tmax = (weatherCurr["t"]["values"][0], weatherCurr["t"]["values"][0])
+        pmean, pmax = (weatherCurr["pmean"]["values"][0], weatherCurr["pmax"]["values"][0])
+        wsMin, wsMax = (weatherCurr["ws"]["values"][0], weatherCurr["ws"]["values"][0])
+        weatherTable.AddRow("Nu", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
 
-        wsymb2 = self.getParameter(self.data[self.index]['timeSeries'][0], 'Wsymb2')
+        weatherNext8h = self.Weather.GetMedianWeather("Göteborg", Now, 8)
+        symb = int(sum(weatherNext8h["Wsymb2"]["values"])/len(weatherNext8h["Wsymb2"]["values"]))
+        Tmin, Tmax = (min(weatherNext8h["t"]["values"]), max(weatherNext8h["t"]["values"]))
+        pmean, pmax = (sum(weatherNext8h["pmean"]["values"]), max(weatherNext8h["pmax"]["values"]))
+        wsMin, wsMax = (min(weatherNext8h["ws"]["values"]), max(weatherNext8h["ws"]["values"]))
+        weatherTable.AddRow("Nästa 8h", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
 
-        new_height = 120
-        png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY)
+        sizerMain.Add(weatherTable)
+        #weatherNext8h = self.Weather.GetMedianWeather("Göteborg", Now, 8)
+        #tempNext8h = str(min(weatherNext8h["t"]["values"])) + "-" + str(max(weatherNext8h["t"]["values"])) 
+        #WeatherBox1 = WeatherBox(panel, "Nästa 8h", tempNext8h, weatherNext8h["Wsymb2"]["values"][0], 75)
+        #SizerMain.Add(WeatherBox1)
+
+        panel.SetSizerAndFit(sizerMain)
+        self.PanelMain.Thaw()
+
+
+
+class WeatherTable(wx.Panel):
+    ImageHeight = 80
+    FontSizeTemp = 54
+    FontSizeOther = 14
+    def __init__(self, Parent):
+        wx.Panel.__init__(self, Parent, -1)
+        self.SetBackgroundColour("Black")
+        self.sizerMain = wx.FlexGridSizer(5, 5, 5)
+        self.SetSizer(self.sizerMain)
+
+
+
+    def AddRow(self, Header, Symbol, TemperatureMin, TemperatureMax, Precipitation, PrecipitationMax, WindspeedMin, \
+               WindSpeedMax, WindDirection1, WindDirection2, WindGustMin, WindGustMax):
+        """Adds a row to weather table"""
+        # Header / Title
+        lblTitle = ST.GenStaticText(self, -1, label=Header, style=wx.ALIGN_CENTER)
+        lblTitle.SetBackgroundColour("Black")
+        lblTitle.SetForegroundColour("White")
+        lblTitle.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+        self.sizerMain.Add(lblTitle, 0, wx.ALIGN_CENTER_VERTICAL)
+        
+        # Weather symbol
+        new_height = self.ImageHeight
+        png = wx.Image('pics/{}.png'.format(Symbol), wx.BITMAP_TYPE_ANY)
         png = png.Scale(int(png.GetWidth()/png.GetHeight()*new_height), new_height, wx.IMAGE_QUALITY_HIGH)
-        mypic = wx.StaticBitmap(panel, -1, wx.Bitmap(png))
+        mypic = wx.StaticBitmap(self, -1, wx.Bitmap(png))
+        self.sizerMain.Add(mypic, 0, wx.ALIGN_CENTER_VERTICAL, 5)
 
-        sizer_left = wx.BoxSizer(wx.VERTICAL)
-        sizer_upper_left = wx.BoxSizer(wx.HORIZONTAL)
+        # Temperature
+        sizerVert = wx.BoxSizer(wx.VERTICAL)
+        for i in range(1):
+            lblNew = ST.GenStaticText(self, -1, label="{}-{}{}C".format(TemperatureMin, TemperatureMax, chr(176)), style=wx.ALIGN_RIGHT)
+            lblNew.SetBackgroundColour("Black")
+            lblNew.SetForegroundColour("White")
+            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            sizerVert.Add(lblNew, 0, wx.EXPAND | wx.ALIGN_CENTER)
+        self.sizerMain.Add(sizerVert, 0, wx.ALIGN_CENTER_VERTICAL, 5)
 
-        sizer_upper_left.Add(lbl_temperature, 2, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_upper_left.Add(mypic, 2, wx.ALL, 0)
+        # Precipitation
+        sizerVert = wx.BoxSizer(wx.VERTICAL)
+        for i in range(2):
+            lblNew = ST.GenStaticText(self, -1, label="{} {}".format(Precipitation if i==0 else PrecipitationMax, "mm" if i==0 else "mm/h"), style=wx.ALIGN_RIGHT)
+            lblNew.SetBackgroundColour("Black")
+            lblNew.SetForegroundColour("White")
+            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            sizerVert.Add(lblNew, 0, wx.EXPAND | wx.ALIGN_CENTER)
+        self.sizerMain.Add(sizerVert, 0, wx.ALIGN_CENTER_VERTICAL, 5)
 
-        # Data table for weather today
-        n_div = 5
-        delta_hour = int((24 - round(now.hour + 0.99)) / n_div + 0.99)
-        sizer_table1 = wx.FlexGridSizer(n_div, 2, 0, 0)
-        for i in range(1,n_div+1):
-            curr_time = (now + timedelta(hours=i*delta_hour)).astimezone(self.timezone)
-            time_serie = self.getTime(curr_time)
-            valid_time = datetime.strptime(time_serie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
-            time_hour = valid_time.astimezone(self.timezone).hour
-            temperature = self.getParameter(time_serie, 't')   # temperature degC
-            pmean = self.getParameter(time_serie, 'pmean')     # Mean precipitation intensity mm/hour
-            wsymb2 = self.getParameter(time_serie, 'Wsymb2')    # Weather symbol   1-27 integer
+        # Wind speed + wind gust
+        sizerVert = wx.BoxSizer(wx.VERTICAL)
+        for i in range(2):
+            lblNew = ST.GenStaticText(self, -1, label="{}-{} m/s".format(WindspeedMin if i==0 else WindGustMin, WindSpeedMax if i==0 else WindGustMax), style=wx.ALIGN_CENTER)
+            lblNew.SetBackgroundColour("Black")
+            lblNew.SetForegroundColour("White")
+            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            sizerVert.Add(lblNew, 0, wx.EXPAND | wx.ALIGN_CENTER)
+        self.sizerMain.Add(sizerVert, 0, wx.ALIGN_CENTER_VERTICAL, 5)
 
-            lbl_1 = wx.StaticText(panel, label='kl.{:2}   {:>5}{}C    {:>4} mm/h'.format(time_hour, temperature,
-                                                                                         chr(176), pmean))
-            lbl_1.SetForegroundColour("White")
-            lbl_1.SetFont(self.font3)
-            png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY).Scale(35, 24, wx.IMAGE_QUALITY_HIGH)
-            mypic = wx.StaticBitmap(panel, -1, wx.Bitmap(png))
-            sizer_table1.Add(lbl_1, 1, wx.ALIGN_CENTER_VERTICAL, 0)
-            sizer_table1.Add(mypic, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
 
-        sizer_table1.AddGrowableCol(1, 1)
 
-        line1 = wx.StaticLine(panel, 0, style=wx.LI_HORIZONTAL)
-        line1.SetForegroundColour('Grey')
 
-        # Data table for weather tomorrow
-        time_values = [0, 3, 6, 9, 12, 15, 18, 21, 24]
-        sizer_table2 = wx.FlexGridSizer(len(time_values), 2, 2, 2)
-        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        for time_value in time_values:
-            curr_time = (tomorrow + timedelta(hours=time_value)).astimezone(self.timezone)
-            time_serie = self.getTime(curr_time)
-            valid_time = datetime.strptime(time_serie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
-            time_hour = valid_time.astimezone(self.timezone).hour
-            temperature = self.getParameter(time_serie, 't')  # temperature degC
-            pmean = self.getParameter(time_serie, 'pmean')  # Mean precipitation intensity mm/hour
-            wsymb2 = self.getParameter(time_serie, 'Wsymb2')  # Weather symbol   1-27 integer
+        
 
-            lbl_1 = wx.StaticText(panel, label='kl.{:2}   {:>5}{}C    {:>4} mm/h'.format(time_hour, temperature,
-                                                                                         chr(176), pmean))
-            lbl_1.SetForegroundColour("White")
-            lbl_1.SetFont(self.font3)
-            png = wx.Image('pics/{}.png'.format(wsymb2), wx.BITMAP_TYPE_ANY).Scale(35, 24, wx.IMAGE_QUALITY_HIGH)
-            mypic = wx.StaticBitmap(panel, -1, wx.Bitmap(png))
-            sizer_table2.Add(lbl_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
-            sizer_table2.Add(mypic, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 0)
 
-        sizer_table2.AddGrowableCol(1, 1)
 
-        sizer_left.Add(lbl_city, 0, wx.ALIGN_CENTER, 0)
-        sizer_left.Add(sizer_upper_left, 0, wx.EXPAND, 0)
-        sizer_left.Add(sizer_table1, 0, wx.EXPAND, 0)
-        sizer_left.Add(line1, 0, wx.ALL | wx.EXPAND, 5)
-        sizer_left.Add(sizer_table2, 0, wx.EXPAND, 0)
 
-        panel.SetSizer(sizer_left)
 
-        panel.Fit()
-        self.panel_main.Fit()
 
-        panel.Thaw()
-        self.panel_main.Thaw()
 
-    def update_dataset(self):
-        """
-        Updates the data set from SMHI weather service
 
-        """
+class GetSMHIWeather:
+    url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'
+    def __init__(self, userSettings):
+        self.places = userSettings['places'] if 'places' in userSettings else {'Skellefteå': {'lat': 64.75203, 'long': 20.95350}}
+        
+        self.Data = dict()
 
+        for place in self.places:
+            self.Data[place] = dict()
+
+    def GetWeather(self):
         cnt = -1
         for place_name, place in self.places.items():
             cnt += 1
@@ -190,42 +189,54 @@ class ModuleWeather:
 
             # If data retrieved OK, load it into self.data
             if self.status_ok is True:
-                self.data[cnt] = tmp
+                self.Data[place_name] = tmp
 
-    def getCurrentWeather(self):
-        """
-        Get time_serie
-        """
-        now = datetime.now(self.timezone)
+    def GetMedianWeather(self, PlaceName, LocalTime1, Hours):
+        CollectedValues = dict() 
 
-        for time_serie in self.data[self.index]['timeSeries']:
-            curr_time = datetime.strptime(time_serie['validTime'], '%Y-%m-%dT%H:%M:%S%z')
-            if (curr_time - now).total_seconds() < 3600:
-                return time_serie
+        AddValues = False
+        cnt = 0
+        for timeValue in self.Data[PlaceName]["timeSeries"]:
+            CurrValidTime = datetime.strptime(timeValue["validTime"][:-1] + "+0000", '%Y-%m-%dT%H:%M:%S%z')
+            if CurrValidTime - timedelta(hours=1) <= LocalTime1 < CurrValidTime:
+                AddValues = True
 
-    def getParameter(self, time_serie, parameter_name):
-        """
-        Returns the value of the specified parameter (parameter_name) for a specified time_serie given in
-        the SMHI format
-        """
-        requested_parameter = next((item for item in time_serie['parameters'] if item['name'] == parameter_name), None)
-        return requested_parameter['values'][0]
+            if AddValues is False:
+                continue
+            cnt += 1
+            if cnt > Hours:
+                break
 
-    def getTime(self, local_datetime):
-        validtime_prev = datetime.strptime(self.data[self.index]['referenceTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
-        for timeSerie in self.data[self.index]['timeSeries']:
-            validtime = datetime.strptime(timeSerie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
-            if validtime_prev < local_datetime <= validtime:
-                return timeSerie
+            print(CurrValidTime.strftime('%Y-%m-%d %H:%M:%S.%f%z'))
 
-    def getTimeAverage(self, startTime, endTime, param_str):
-        values = []
-        for timeSerie in self.data[self.index]['timeSeries']:
-            validtime = datetime.strptime(timeSerie['validTime'][0:-1]+'+0000', '%Y-%m-%dT%H:%M:%S%z')
-            if startTime < validtime <= endTime:
-                for parameter in timeSerie['parameters']:
-                    if parameter['name'] == param_str:
-                        values.append(parameter['values'][0])
-                print('Valid time is {}   {}'.format(timeSerie['validTime'], startTime))
+            for parameter in timeValue["parameters"]:
+                if parameter["name"] not in CollectedValues:
+                    CollectedValues[parameter["name"]] = {"values": [], "unit": parameter["unit"]}
 
-        print(values)
+                CollectedValues[parameter["name"]]["values"].append(parameter["values"][0])
+
+        return CollectedValues
+
+                
+
+
+with open('MagicMirrorSettings.json', encoding='utf-8') as data_file:
+    userSettings = json.load(data_file)
+
+userInput_placesList = userSettings['placesList']
+userInput_googleCalendar = userSettings['googleCalendar']
+userInput_SMHI = userSettings['SMHI']
+userInput_vastTrafik = userSettings['vastTrafik']
+userInput_sunriseSunset = userSettings['sunriseSunset']
+
+# Append (but don't replace) missing information SMHI 'places' from 'placesList'
+for place in userInput_SMHI['places']:
+    if place in userInput_placesList:
+        userInput_SMHI['places'][place] = {**userInput_placesList[place], **userInput_SMHI['places'][place]}
+
+
+Weather = GetSMHIWeather(userInput_SMHI)
+Weather.GetWeather()
+Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
+Tomorrow = (Now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+Weather.GetMedianWeather("Göteborg", Tomorrow, 6)

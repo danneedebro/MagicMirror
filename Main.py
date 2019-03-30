@@ -86,7 +86,7 @@ class Example(wx.Frame):
             self.vasttrafik.updateDataSet()
 
         self.calendar.UpdateCheck()
-        self.weather.update_check()
+        self.weather.UpdateCheck()
         self.clock.update_check()
 
     def on_keypress(self, event):
