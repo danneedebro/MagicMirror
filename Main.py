@@ -41,8 +41,11 @@ class Example(wx.Frame):
         panel_vasttrafik = wx.Panel(self)
         self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(panel_vasttrafik, userInput_vastTrafik)
 
-        panel_calendar = wx.Panel(self)
-        self.calendar = ModuleCalendar(panel_calendar, userInput_googleCalendar)
+        panel_calendar1 = wx.Panel(self)
+        self.calendar1 = ModuleCalendar(panel_calendar1, userInput_googleCalendar, ShowUpdatedList = False)
+
+        panel_calendar2 = wx.Panel(self)
+        self.calendar2 = ModuleCalendar(panel_calendar2, userInput_googleCalendar, ShowMainCalendar = False)
 
         panel_weather = wx.Panel(self)
         self.weather = ModuleWeather.ModuleWeather(panel_weather, userInput_SMHI)
@@ -55,11 +58,12 @@ class Example(wx.Frame):
         sizer_main = wx.BoxSizer(wx.HORIZONTAL)
 
         sizer_left.Add(panel_clock, 0, wx.LEFT, 15)
-        sizer_left.Add(panel_calendar, 0, wx.LEFT, 15)
+        sizer_left.Add(panel_weather, 0, wx.LEFT, 15)
+        sizer_left.Add(panel_vasttrafik, 0, wx.LEFT, 15)
 
-        sizer_right.Add(panel_weather, 0, wx.ALIGN_RIGHT, 5)
+        sizer_right.Add(panel_calendar1, 0, wx.ALIGN_RIGHT, 5)
+        sizer_right.Add(panel_calendar2, 0, wx.ALIGN_RIGHT, 5)
         sizer_right.Add(panel_sunset, 0, wx.ALIGN_RIGHT, 5)
-        sizer_right.Add(panel_vasttrafik, 0, wx.ALIGN_RIGHT, 5)
 
         sizer_main.Add(sizer_left, 1, wx.ALIGN_LEFT, 5)
         sizer_main.Add(sizer_right, 1, wx.ALL, 5)
@@ -85,7 +89,8 @@ class Example(wx.Frame):
         if (now - self.vasttrafik.updated_data).seconds >= self.vasttrafik.updateFreqData:
             self.vasttrafik.updateDataSet()
 
-        self.calendar.UpdateCheck()
+        self.calendar1.UpdateCheck()
+        self.calendar2.UpdateCheck()
         self.weather.UpdateCheck()
         self.clock.update_check()
 

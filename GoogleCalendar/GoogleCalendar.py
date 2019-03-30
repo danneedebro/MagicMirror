@@ -19,15 +19,18 @@ class ModuleCalendar:
     CalendarData = dict()
     UpdateFrequencyData = 60
     UpdateFrequencyGraphics = 10
-    Events = dict()
-    Events
+    ShowMainCalendar = True
+    ShowUpdatedList = True
 
-    def __init__(self, Parent, CalendarSettings):
+    def __init__(self, Parent, CalendarSettings, **kwargs):
         self.PanelMain = Parent
 
         self.UpdateFrequencyData = CalendarSettings["updateFreqData"] if "updateFreqData" in CalendarSettings else self.UpdateFrequencyData
         self.UpdateFrequencyGraphics = CalendarSettings["updateFreqGraphics"] if "updateFreqGraphics" in CalendarSettings else self.UpdateFrequencyGraphics
         self.NumberOfWeeks = CalendarSettings["weeksToPlot"] if "weeksToPlot" in CalendarSettings else self.NumberOfWeeks
+
+        self.ShowMainCalendar = kwargs["ShowMainCalendar"] if "ShowMainCalendar" in kwargs else self.ShowMainCalendar
+        self.ShowUpdatedList = kwargs["ShowUpdatedList"] if "ShowUpdatedList" in kwargs else self.ShowUpdatedList
 
         self.LastUpdateData = datetime.now() - timedelta(seconds=self.UpdateFrequencyData)
         self.Events = GetGoogleEvents(CalendarSettings)
@@ -59,71 +62,74 @@ class ModuleCalendar:
         panel.SetBackgroundColour("Black")
 
         SizerMain = wx.BoxSizer(wx.VERTICAL)
-        SizerFlexGrid = wx.FlexGridSizer(self.NumberOfWeeks+1, 7, 0, 0)
-
 
         Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
         Today = Now.replace(hour=0, minute=0, second=0, microsecond=0)
         ThisMonday = Today - timedelta(days=Today.isoweekday() - 1)
 
-        # Construct an empty 'CalendarData' dict
-        self.CalendarData.clear()
-        for Day in range(self.NumberOfWeeks*7):
-            CurrDate = ThisMonday + timedelta(days=Day)
-            self.CalendarData[CurrDate.strftime('%Y-%m-%d')] = {"Events": [], "Date": CurrDate}
+        # Draw main calandar
+        if self.ShowMainCalendar:
+            SizerFlexGrid = wx.FlexGridSizer(self.NumberOfWeeks+1, 7, 0, 0)
 
-        # Populate 'CalendarData' with events
-        for event in self.Events.ByDate:
-            self.AddEvent(event["Summary"], event["EventStart"], event["EventEnd"])
+            # Construct an empty 'CalendarData' dict
+            self.CalendarData.clear()
+            for Day in range(self.NumberOfWeeks*7):
+                CurrDate = ThisMonday + timedelta(days=Day)
+                self.CalendarData[CurrDate.strftime('%Y-%m-%d')] = {"Events": [], "Date": CurrDate}
 
-        # Add a header with weeksdays on blue background    
-        for Day in range(7):
-            NewBox = MyBox(panel, ThisMonday + timedelta(days=Day), True, BackgroundColour="Blue")
-            NewBox.SetBackgroundColour("Blue")
-            SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
+            # Populate 'CalendarData' with events
+            for event in self.Events.ByDate:
+                self.AddEvent(event["Summary"], event["EventStart"], event["EventEnd"])
 
-        # Loop through 'CalendarData' and create a box for each day
-        for Day in sorted(self.CalendarData.keys()):
-            CurrDate = self.CalendarData[Day]["Date"]
+            # Add a header with weeksdays on blue background    
+            for Day in range(7):
+                NewBox = MyBox(panel, ThisMonday + timedelta(days=Day), True, BackgroundColour="Blue")
+                NewBox.SetBackgroundColour("Blue")
+                SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
 
-            NewBox = MyBox(panel, CurrDate, False)
-            if CurrDate == Today:
-                NewBox.BorderColour = "Red"
-                NewBox.BorderWidth = 2
-            
-            for event in self.CalendarData[Day]["Events"]:
-                NewBox.PrintEvent(event["Summary"], event["EventStart"], event["EventEnd"])
+            # Loop through 'CalendarData' and create a box for each day
+            for Day in sorted(self.CalendarData.keys()):
+                CurrDate = self.CalendarData[Day]["Date"]
+
+                NewBox = MyBox(panel, CurrDate, False)
+                if CurrDate == Today:
+                    NewBox.BorderColour = "Red"
+                    NewBox.BorderWidth = 2
                 
-            SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
+                for event in self.CalendarData[Day]["Events"]:
+                    NewBox.PrintEvent(event["Summary"], event["EventStart"], event["EventEnd"])
+                    
+                SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
 
-        SizerMain.Add(SizerFlexGrid)
+            SizerMain.Add(SizerFlexGrid)
 
-        # Add a List with last updated events
-        lblNew = ST.GenStaticText(panel, -1, label="Senast uppdaterade")
-        lblNew.SetForegroundColour("White")
-        lblNew.SetBackgroundColour("Black")
-        lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
-        SizerMain.Add(lblNew, 0, wx.ALL, 5)
+        # Display a last updated list
+        if self.ShowUpdatedList:
+            # Add a List with last updated events
+            lblNew = ST.GenStaticText(panel, -1, label="Senast uppdaterade")
+            lblNew.SetForegroundColour("White")
+            lblNew.SetBackgroundColour("Black")
+            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            SizerMain.Add(lblNew, 0, wx.ALL, 5)
 
-        cnt = 0
-        for event in self.Events.ByUpdated:
-            if 0 < (Now - event["EventUpdated"]).days > 30:
-                continue
-            cnt += 1
-            if cnt > 10:
-                break
-            SizerEvent = wx.BoxSizer(wx.HORIZONTAL)
-            for i in range(2):
-                lblNewString = event["Summary"] if i == 0 else GetEventDate(event["EventStart"], event["EventEnd"])
-                lblNew = ST.GenStaticText(panel, -1, label=lblNewString)
-                lblNew.SetBackgroundColour("Black")
-                lblNew.SetForegroundColour("White" if i == 0 else "Gray")
-                SizerEvent.Add(lblNew, 0, wx.LEFT, 7)
+            cnt = 0
+            for event in self.Events.ByUpdated:
+                if 0 < (Now - event["EventUpdated"]).days > 30:
+                    continue
+                cnt += 1
+                if cnt > 10:
+                    break
+                SizerEvent = wx.BoxSizer(wx.HORIZONTAL)
+                for i in range(2):
+                    lblNewString = event["Summary"] if i == 0 else GetEventDate(event["EventStart"], event["EventEnd"])
+                    lblNew = ST.GenStaticText(panel, -1, label=lblNewString)
+                    lblNew.SetBackgroundColour("Black")
+                    lblNew.SetForegroundColour("White" if i == 0 else "Gray")
+                    SizerEvent.Add(lblNew, 0, wx.LEFT, 7)
 
-            SizerMain.Add(SizerEvent)
+                SizerMain.Add(SizerEvent)
 
         panel.SetSizerAndFit(SizerMain)
-
         self.PanelMain.Thaw()
 
     def AddEvent(self, EventSummary, EventStart, EventEnd):

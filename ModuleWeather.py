@@ -59,104 +59,85 @@ class ModuleWeather:
 
         Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
 
-        sizerMain = wx.BoxSizer(wx.VERTICAL)
-        weatherTable = WeatherTable(panel)
+        sizerMain = wx.BoxSizer(wx.HORIZONTAL)
 
         weatherCurr = self.Weather.GetMedianWeather("Göteborg", Now, 1)
         symb = weatherCurr["Wsymb2"]["values"][0]
-        Tmin, Tmax = (weatherCurr["t"]["values"][0], weatherCurr["t"]["values"][0])
+        Tmin, Tmax = (None, weatherCurr["t"]["values"][0])
         pmean, pmax = (weatherCurr["pmean"]["values"][0], weatherCurr["pmax"]["values"][0])
-        wsMin, wsMax = (weatherCurr["ws"]["values"][0], weatherCurr["ws"]["values"][0])
-        weatherTable.AddRow("Nu", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
+        wsMin, wsMax = (None, weatherCurr["ws"]["values"][0])
+        weatherBoxNew = WeatherBox(panel, "Nu", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
+        sizerMain.Add(weatherBoxNew, 0, wx.ALL, 3)
 
         weatherNext8h = self.Weather.GetMedianWeather("Göteborg", Now, 8)
         symb = int(sum(weatherNext8h["Wsymb2"]["values"])/len(weatherNext8h["Wsymb2"]["values"]))
         Tmin, Tmax = (min(weatherNext8h["t"]["values"]), max(weatherNext8h["t"]["values"]))
         pmean, pmax = (sum(weatherNext8h["pmean"]["values"]), max(weatherNext8h["pmax"]["values"]))
         wsMin, wsMax = (min(weatherNext8h["ws"]["values"]), max(weatherNext8h["ws"]["values"]))
-        weatherTable.AddRow("Nästa 8h", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
+        weatherBoxNew = WeatherBox(panel, "Nästa 8h", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
+        sizerMain.Add(weatherBoxNew, 0, wx.ALL, 3)
 
-        sizerMain.Add(weatherTable)
-        #weatherNext8h = self.Weather.GetMedianWeather("Göteborg", Now, 8)
-        #tempNext8h = str(min(weatherNext8h["t"]["values"])) + "-" + str(max(weatherNext8h["t"]["values"])) 
-        #WeatherBox1 = WeatherBox(panel, "Nästa 8h", tempNext8h, weatherNext8h["Wsymb2"]["values"][0], 75)
-        #SizerMain.Add(WeatherBox1)
+        dateTomorrow = (Now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+        weatherTomorrow = self.Weather.GetMedianWeather("Göteborg", dateTomorrow, 6)
+        symb = int(sum(weatherTomorrow["Wsymb2"]["values"])/len(weatherTomorrow["Wsymb2"]["values"]))
+        Tmin, Tmax = (min(weatherTomorrow["t"]["values"]), max(weatherTomorrow["t"]["values"]))
+        pmean, pmax = (sum(weatherTomorrow["pmean"]["values"]), max(weatherTomorrow["pmax"]["values"]))
+        wsMin, wsMax = (min(weatherTomorrow["ws"]["values"]), max(weatherTomorrow["ws"]["values"]))
+        weatherBoxNew = WeatherBox(panel, "Imorgon 9-15", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
+        sizerMain.Add(weatherBoxNew, 0, wx.ALL, 3)
+
 
         panel.SetSizerAndFit(sizerMain)
         self.PanelMain.Thaw()
 
 
 
-class WeatherTable(wx.Panel):
+class WeatherBox(wx.Panel):
     ImageHeight = 80
     FontSizeTemp = 54
     FontSizeOther = 14
-    def __init__(self, Parent):
+    def __init__(self, Parent, Header, Symbol, TemperatureMin, TemperatureMax, Precipitation, PrecipitationMax, WindspeedMin, \
+               WindSpeedMax, WindDirection1, WindDirection2, WindGustMin, WindGustMax):
         wx.Panel.__init__(self, Parent, -1)
         self.SetBackgroundColour("Black")
-        self.sizerMain = wx.FlexGridSizer(5, 5, 5)
-        self.SetSizer(self.sizerMain)
+        self.sizerMain = wx.BoxSizer(wx.VERTICAL)
 
+        Fields = dict()
+        Fields["Header"] = {"Text": Header, "FontSize": 12}
+        Fields["Temperature"] = {"Text": "{}{}C".format(TemperatureMax if TemperatureMin is None else "{} - {}".format(TemperatureMin, TemperatureMax), chr(176)), "FontSize": 14}
+        Fields["Precipitation"] = {"Text": "{} mm ({} mm/h)".format(Precipitation, PrecipitationMax), "FontSize": 10}
+        Fields["Windspeed"] = {"Text": "{} m/s".format(WindSpeedMax if WindspeedMin is None else "{} - {}".format(WindspeedMin, WindSpeedMax)), "FontSize": 10}
 
-
-    def AddRow(self, Header, Symbol, TemperatureMin, TemperatureMax, Precipitation, PrecipitationMax, WindspeedMin, \
-               WindSpeedMax, WindDirection1, WindDirection2, WindGustMin, WindGustMax):
-        """Adds a row to weather table"""
-        # Header / Title
-        lblTitle = ST.GenStaticText(self, -1, label=Header, style=wx.ALIGN_CENTER)
-        lblTitle.SetBackgroundColour("Black")
-        lblTitle.SetForegroundColour("White")
-        lblTitle.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
-        self.sizerMain.Add(lblTitle, 0, wx.ALIGN_CENTER_VERTICAL)
-        
         # Weather symbol
         new_height = self.ImageHeight
         png = wx.Image('pics/{}.png'.format(Symbol), wx.BITMAP_TYPE_ANY)
         png = png.Scale(int(png.GetWidth()/png.GetHeight()*new_height), new_height, wx.IMAGE_QUALITY_HIGH)
         mypic = wx.StaticBitmap(self, -1, wx.Bitmap(png))
-        self.sizerMain.Add(mypic, 0, wx.ALIGN_CENTER_VERTICAL, 5)
-
-        # Temperature
-        sizerVert = wx.BoxSizer(wx.VERTICAL)
-        for i in range(1):
-            lblNew = ST.GenStaticText(self, -1, label="{}-{}{}C".format(TemperatureMin, TemperatureMax, chr(176)), style=wx.ALIGN_RIGHT)
-            lblNew.SetBackgroundColour("Black")
-            lblNew.SetForegroundColour("White")
-            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
-            sizerVert.Add(lblNew, 0, wx.EXPAND | wx.ALIGN_CENTER)
-        self.sizerMain.Add(sizerVert, 0, wx.ALIGN_CENTER_VERTICAL, 5)
-
-        # Precipitation
-        sizerVert = wx.BoxSizer(wx.VERTICAL)
-        for i in range(2):
-            lblNew = ST.GenStaticText(self, -1, label="{} {}".format(Precipitation if i==0 else PrecipitationMax, "mm" if i==0 else "mm/h"), style=wx.ALIGN_RIGHT)
-            lblNew.SetBackgroundColour("Black")
-            lblNew.SetForegroundColour("White")
-            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
-            sizerVert.Add(lblNew, 0, wx.EXPAND | wx.ALIGN_CENTER)
-        self.sizerMain.Add(sizerVert, 0, wx.ALIGN_CENTER_VERTICAL, 5)
-
-        # Wind speed + wind gust
-        sizerVert = wx.BoxSizer(wx.VERTICAL)
-        for i in range(2):
-            lblNew = ST.GenStaticText(self, -1, label="{}-{} m/s".format(WindspeedMin if i==0 else WindGustMin, WindSpeedMax if i==0 else WindGustMax), style=wx.ALIGN_CENTER)
-            lblNew.SetBackgroundColour("Black")
-            lblNew.SetForegroundColour("White")
-            lblNew.SetFont(wx.Font(pointSize=14, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
-            sizerVert.Add(lblNew, 0, wx.EXPAND | wx.ALIGN_CENTER)
-        self.sizerMain.Add(sizerVert, 0, wx.ALIGN_CENTER_VERTICAL, 5)
-
-
-
-
         
+        for key, textField in Fields.items():
+            lblField = ST.GenStaticText(self, -1, label=textField["Text"], style=wx.ALIGN_CENTER)
+            lblField.SetBackgroundColour("Black")
+            lblField.SetForegroundColour("White")
+            lblField.SetFont(wx.Font(pointSize=textField["FontSize"], family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            self.sizerMain.Add(lblField, 0, wx.ALIGN_CENTER|wx.ALL, 2)
+            if key == "Header":
+                self.sizerMain.Add(mypic, 0, wx.ALIGN_CENTER| wx.ALL, 2)
 
+        self.SetSizer(self.sizerMain)
+        sizerSize = self.sizerMain.GetSize()
+        #self.sizerMain.SetMinSize(size=(sizerSize.GetWidth()+5, sizerSize.GetHeight()+5))
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
 
+    def OnPaint(self, event):
+        """set up the device context (DC) for painting"""
+        dc = wx.PaintDC(self)
 
-
-
-
-
+        #blue non-filled rectangle
+        dc.SetPen(wx.Pen("Gray", width=1))
+        dc.SetBrush(wx.Brush("black", wx.TRANSPARENT)) #set brush transparent for non-filled rectangle
+        sizerSize = self.sizerMain.GetSize()
+        dc.DrawRoundedRectangle(0,0, sizerSize.GetWidth(), sizerSize.GetHeight(), 10)
+        
 
 class GetSMHIWeather:
     url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'
@@ -196,6 +177,7 @@ class GetSMHIWeather:
 
         AddValues = False
         cnt = 0
+        print("Hämtar data från {}".format(LocalTime1.strftime('%Y-%m-%d %H:%M:%S.%f%z')))
         for timeValue in self.Data[PlaceName]["timeSeries"]:
             CurrValidTime = datetime.strptime(timeValue["validTime"][:-1] + "+0000", '%Y-%m-%dT%H:%M:%S%z')
             if CurrValidTime - timedelta(hours=1) <= LocalTime1 < CurrValidTime:
