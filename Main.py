@@ -45,6 +45,7 @@ class Example(wx.Frame):
         self.calendar1 = ModuleCalendar(panel_calendar1, userInput_googleCalendar, ShowUpdatedList = False)
 
         panel_calendar2 = wx.Panel(self)
+        panel_calendar2.SetBackgroundColour("Green")
         self.calendar2 = ModuleCalendar(panel_calendar2, userInput_googleCalendar, ShowMainCalendar = False)
 
         panel_weather = wx.Panel(self)
@@ -55,15 +56,17 @@ class Example(wx.Frame):
 
         sizer_left = wx.BoxSizer(wx.VERTICAL)
         sizer_right = wx.BoxSizer(wx.VERTICAL)
+        sizer_right_bottom = wx.BoxSizer(wx.HORIZONTAL)
         sizer_main = wx.BoxSizer(wx.HORIZONTAL)
 
         sizer_left.Add(panel_clock, 0, wx.LEFT, 15)
-        sizer_left.Add(panel_weather, 0, wx.LEFT, 15)
         sizer_left.Add(panel_vasttrafik, 0, wx.LEFT, 15)
+        sizer_left.Add(panel_sunset, 0, wx.LEFT, 15)
 
-        sizer_right.Add(panel_calendar1, 0, wx.ALIGN_RIGHT, 5)
-        sizer_right.Add(panel_calendar2, 0, wx.ALIGN_RIGHT, 5)
-        sizer_right.Add(panel_sunset, 0, wx.ALIGN_RIGHT, 5)
+        sizer_right.Add(panel_calendar1, 0, wx.ALIGN_LEFT, 5)
+        sizer_right_bottom.Add(panel_weather, 0, wx.ALIGN_LEFT, 5)
+        sizer_right_bottom.Add(panel_calendar2, 0, wx.ALIGN_RIGHT, 5)
+        sizer_right.Add(sizer_right_bottom, 0, wx.EXPAND|wx.ALIGN_LEFT, 5)
 
         sizer_main.Add(sizer_left, 1, wx.ALIGN_LEFT, 5)
         sizer_main.Add(sizer_right, 1, wx.ALL, 5)

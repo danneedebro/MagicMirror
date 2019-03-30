@@ -103,10 +103,10 @@ class WeatherBox(wx.Panel):
         self.sizerMain = wx.BoxSizer(wx.VERTICAL)
 
         Fields = dict()
-        Fields["Header"] = {"Text": Header, "FontSize": 12}
-        Fields["Temperature"] = {"Text": "{}{}C".format(TemperatureMax if TemperatureMin is None else "{} - {}".format(TemperatureMin, TemperatureMax), chr(176)), "FontSize": 14}
-        Fields["Precipitation"] = {"Text": "{} mm ({} mm/h)".format(Precipitation, PrecipitationMax), "FontSize": 10}
-        Fields["Windspeed"] = {"Text": "{} m/s".format(WindSpeedMax if WindspeedMin is None else "{} - {}".format(WindspeedMin, WindSpeedMax)), "FontSize": 10}
+        Fields["1. Header"] = {"Text": Header, "FontSize": 12}
+        Fields["2. Temperature"] = {"Text": "{}{}C".format(TemperatureMax if TemperatureMin is None else "{} - {}".format(TemperatureMin, TemperatureMax), chr(176)), "FontSize": 14}
+        Fields["3. Precipitation"] = {"Text": "{} mm ({} mm/h)".format(Precipitation, PrecipitationMax), "FontSize": 10}
+        Fields["4. Windspeed"] = {"Text": "{} m/s".format(WindSpeedMax if WindspeedMin is None else "{} - {}".format(WindspeedMin, WindSpeedMax)), "FontSize": 10}
 
         # Weather symbol
         new_height = self.ImageHeight
@@ -114,13 +114,13 @@ class WeatherBox(wx.Panel):
         png = png.Scale(int(png.GetWidth()/png.GetHeight()*new_height), new_height, wx.IMAGE_QUALITY_HIGH)
         mypic = wx.StaticBitmap(self, -1, wx.Bitmap(png))
         
-        for key, textField in Fields.items():
+        for key, textField in sorted(Fields.items()):
             lblField = ST.GenStaticText(self, -1, label=textField["Text"], style=wx.ALIGN_CENTER)
             lblField.SetBackgroundColour("Black")
             lblField.SetForegroundColour("White")
             lblField.SetFont(wx.Font(pointSize=textField["FontSize"], family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
             self.sizerMain.Add(lblField, 0, wx.ALIGN_CENTER|wx.ALL, 2)
-            if key == "Header":
+            if key == "1. Header":
                 self.sizerMain.Add(mypic, 0, wx.ALIGN_CENTER| wx.ALL, 2)
 
         self.SetSizer(self.sizerMain)

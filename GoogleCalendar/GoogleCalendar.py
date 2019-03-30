@@ -17,8 +17,8 @@ from operator import itemgetter
 class ModuleCalendar:
     NumberOfWeeks = 5
     CalendarData = dict()
-    UpdateFrequencyData = 60
-    UpdateFrequencyGraphics = 10
+    UpdateFrequencyData = 120
+    UpdateFrequencyGraphics = 30
     ShowMainCalendar = True
     ShowUpdatedList = True
 
@@ -29,8 +29,11 @@ class ModuleCalendar:
         self.UpdateFrequencyGraphics = CalendarSettings["updateFreqGraphics"] if "updateFreqGraphics" in CalendarSettings else self.UpdateFrequencyGraphics
         self.NumberOfWeeks = CalendarSettings["weeksToPlot"] if "weeksToPlot" in CalendarSettings else self.NumberOfWeeks
 
+        # Read optional keyword arguments
         self.ShowMainCalendar = kwargs["ShowMainCalendar"] if "ShowMainCalendar" in kwargs else self.ShowMainCalendar
         self.ShowUpdatedList = kwargs["ShowUpdatedList"] if "ShowUpdatedList" in kwargs else self.ShowUpdatedList
+        self.UpdateFrequencyData = kwargs["UpdateFrequencyData"] if "UpdateFrequencyData" in kwargs else self.UpdateFrequencyData
+        self.UpdateFrequencyGraphics = kwargs["UpdateFrequencyGraphics"] if "UpdateFrequencyGraphics" in kwargs else self.UpdateFrequencyGraphics
 
         self.LastUpdateData = datetime.now() - timedelta(seconds=self.UpdateFrequencyData)
         self.Events = GetGoogleEvents(CalendarSettings)
