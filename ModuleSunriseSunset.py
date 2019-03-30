@@ -55,31 +55,31 @@ class ModuleSunriseSunset:
         panel.SetBackgroundColour('Black')
         panel.Freeze()  # Freeze to avoid flickering
 
-        lbl_sunrise = wx.StaticText(panel, label=self.sunrise.strftime('%H:%M'))
-        lbl_sunrise.SetBackgroundColour('Black')
-        lbl_sunrise.SetForegroundColour('White')
-        lbl_sunrise.SetFont(self.font1)
+        sizerMain = wx.BoxSizer(wx.HORIZONTAL)
 
-        lbl_sunset = wx.StaticText(panel, label=self.sunset.strftime('  %H:%M'))
-        lbl_sunset.SetBackgroundColour('Black')
-        lbl_sunset.SetForegroundColour('White')
-        lbl_sunset.SetFont(self.font1)
+        for i in range(2):
+            sizerVert = wx.BoxSizer(wx.VERTICAL)
+            tmpStr = self.sunrise.strftime("%H:%M") if i == 0 else self.sunset.strftime("%H:%M")
+            lblNew = wx.StaticText(panel, label=tmpStr)
+            lblNew.SetBackgroundColour('Black')
+            lblNew.SetForegroundColour('White')
+            lblNew.SetFont(self.font1)
 
-        png_sunrise = wx.Image('pics/sunrise3.png', wx.BITMAP_TYPE_ANY).Scale(64, 64, wx.IMAGE_QUALITY_HIGH)
-        pic_sunrise=wx.StaticBitmap(panel, -1, wx.Bitmap(png_sunrise))
+            png = wx.Image("pics/sunrise3.png" if i == 0 else "pics/sunset3.png", wx.BITMAP_TYPE_ANY).Scale(64, 64, wx.IMAGE_QUALITY_HIGH)
+            pic=wx.StaticBitmap(panel, -1, wx.Bitmap(png))
 
-        png_sunset = wx.Image('pics/sunset3.png', wx.BITMAP_TYPE_ANY).Scale(64, 64, wx.IMAGE_QUALITY_HIGH)
-        pic_sunset = wx.StaticBitmap(panel, -1, wx.Bitmap(png_sunset))  # , size=(png.GetWidth(), png.GetHeight()))
+            sizerVert.Add(pic, 0, wx.ALIGN_CENTER)
+            sizerVert.Add(lblNew, 0, wx.ALIGN_CENTER)
+            sizerVert.SetMinSize(150, -1)
+            sizerMain.Add(sizerVert, 0, wx.ALIGN_LEFT if i == 0 else wx.ALIGN_RIGHT)
 
-        sizer_main = wx.BoxSizer(wx.HORIZONTAL)
-
-        sizer_main.Add(lbl_sunrise, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
-        sizer_main.Add(pic_sunrise, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
-        sizer_main.Add(lbl_sunset, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
-        sizer_main.Add(pic_sunset, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
+        #sizer_main.Add(lbl_sunrise, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
+        #sizer_main.Add(pic_sunrise, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
+        #sizer_main.Add(lbl_sunset, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
+        #sizer_main.Add(pic_sunset, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
 
 
-        panel.SetSizer(sizer_main)
+        panel.SetSizer(sizerMain)
 
         panel.Fit()
         self.panel_main.Fit()

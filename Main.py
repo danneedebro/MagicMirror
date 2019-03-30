@@ -61,7 +61,7 @@ class Example(wx.Frame):
 
         sizer_left.Add(panel_clock, 0, wx.LEFT, 15)
         sizer_left.Add(panel_vasttrafik, 0, wx.LEFT, 15)
-        sizer_left.Add(panel_sunset, 0, wx.LEFT, 15)
+        sizer_left.Add(panel_sunset, 0, wx.LEFT|wx.EXPAND, 15)
 
         sizer_right.Add(panel_calendar1, 0, wx.ALIGN_LEFT, 5)
         sizer_right_bottom.Add(panel_weather, 0, wx.ALIGN_LEFT, 5)
