@@ -73,12 +73,6 @@ class ModuleSunriseSunset:
             sizerVert.SetMinSize(150, -1)
             sizerMain.Add(sizerVert, 0, wx.ALIGN_LEFT if i == 0 else wx.ALIGN_RIGHT)
 
-        #sizer_main.Add(lbl_sunrise, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
-        #sizer_main.Add(pic_sunrise, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 0)
-        #sizer_main.Add(lbl_sunset, 1, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
-        #sizer_main.Add(pic_sunset, 0, wx.ALL|wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT, 0)
-
-
         panel.SetSizer(sizerMain)
 
         panel.Fit()

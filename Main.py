@@ -86,12 +86,7 @@ class Example(wx.Frame):
     def tick(self, ev):
         now = datetime.now()
 
-        if (now - self.vasttrafik.updated_graphics).seconds >= self.vasttrafik.updateFreqGraphics:
-            self.vasttrafik.update()
-
-        if (now - self.vasttrafik.updated_data).seconds >= self.vasttrafik.updateFreqData:
-            self.vasttrafik.updateDataSet()
-
+        self.vasttrafik.UpdateCheck()
         self.calendar1.UpdateCheck()
         self.calendar2.UpdateCheck()
         self.weather.UpdateCheck()

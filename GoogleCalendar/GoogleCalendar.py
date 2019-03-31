@@ -299,14 +299,9 @@ class GetGoogleEvents:
                                                       singleEvents=True, orderBy='startTime').execute()
                 elif i == 1:
                     if track_updates is False:
-                        print("   breaking")
                         break
                     NewEvents = service.events().list(calendarId=calendar_id, timeMin=StartTime2, maxResults=max_results,
                                                       singleEvents=False, orderBy='updated').execute()
-                    print("Hello")
-
-                if calendar_id == "daniel.edebro@gmail.com":
-                        print("")
 
                 events = NewEvents.get('items', [])
 
@@ -335,7 +330,6 @@ class GetGoogleEvents:
 
         self.ByDate = sorted(self.ByDate, key=itemgetter('EventStart'))
         self.ByUpdated = sorted(self.ByUpdated, key=itemgetter('EventUpdated'), reverse=True)
-        print("Hello")
 
 
 
