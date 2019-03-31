@@ -136,7 +136,7 @@ class ModuleCalendar:
         self.PanelMain.Thaw()
 
     def AddEvent(self, EventSummary, EventStart, EventEnd):
-        for i in range((EventEnd - EventStart).days+1):
+        for i in range(0, EventEnd.toordinal() - EventStart.toordinal()+1):
             CurrDate = EventStart + timedelta(days=i)
             CurrDateStr = CurrDate.strftime('%Y-%m-%d')
             if CurrDateStr in self.CalendarData:
