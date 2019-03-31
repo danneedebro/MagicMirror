@@ -73,6 +73,7 @@ class Example(wx.Frame):
         sizer_main.Add(sizer_right, 1, wx.ALL, 5)
 
         self.SetSizer(sizer_main)
+        self.UpdatedComplete = datetime.now()
         self.Fit()
 
         self.timer = wx.Timer(self)
@@ -92,6 +93,11 @@ class Example(wx.Frame):
         self.calendar2.UpdateCheck()
         self.weather.UpdateCheck()
         self.clock.update_check()
+        
+        if (now - self.UpdatedComplete).seconds > 120:
+            self.UpdatedComplete = datetime.now()
+            self.Fit()
+        
 
     def on_keypress(self, event):
         keycode = event.GetKeyCode()
