@@ -52,6 +52,7 @@ class Example(wx.Frame):
         self.weather = ModuleWeather.ModuleWeather(panel_weather, userInput_SMHI)
 
         panel_sunset = wx.Panel(self)
+        panel_sunset.SetBackgroundColour("black")
         self.sunset = ModuleSunriseSunset.ModuleSunriseSunset(panel_sunset, userInput_sunriseSunset)
 
         sizer_left = wx.BoxSizer(wx.VERTICAL)
