@@ -281,6 +281,7 @@ class GetGoogleEvents:
             max_results = calendar['maxResults'] if 'maxResults' in calendar else 100
             calendar_id = calendar['id'] if 'id' in calendar else 'primary'
             track_updates = calendar['trackUpdates'] if 'trackUpdates' in calendar else True
+            days_ahead = calendar['daysAhead'] if 'daysAhead' in calendar else 0
 
             store = file.Storage(token_file)
             creds = store.get()
@@ -294,8 +295,13 @@ class GetGoogleEvents:
             for i in range(2):
                 print("Läser in kalender {}, index={}".format(calendar_id, i))
                 if i == 0:
-                    NewEvents = service.events().list(calendarId=calendar_id, timeMin=StartTime1, maxResults=max_results,
-                                                      singleEvents=True, orderBy='startTime').execute()
+                    myDict = {"calendarId": calendar_id, "timeMin": StartTime1, "maxResults": max_results, "singleEvents": True, "orderBy": 'startTime'}
+                    if days_ahead != 0:
+                        myDict["timeMin"] = Today.strftime('%Y-%m-%dT%H:%M:%S%z')
+                        myDict["timeMax"] = (Today + timedelta(days=days_ahead)).strftime('%Y-%m-%dT%H:%M:%S%z')
+                    NewEvents = service.events().list(**myDict).execute()
+                    #NewEvents = service.events().list(calendarId=calendar_id, timeMin=StartTime1, maxResults=max_results,
+                    #                                  singleEvents=True, orderBy='startTime').execute()
                 elif i == 1:
                     if track_updates is False:
                         break
