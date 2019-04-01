@@ -199,18 +199,16 @@ class MyBox(wx.Panel):
                 lblNewString = "{}-{}".format(EventStart.strftime('%H:%M'),EventEnd.strftime('%H:%M'))
             else:
                 lblNewString = TextSplit(EventSummary, 8, 14)
-                #if len(EventSummary) > 15:
-                #    lblNewString = TextSplit(EventSummary[:15] + "\n" + EventSummary[15:]
-                #else:
-                #    lblNewString = EventSummary
 
             lblNew = ST.GenStaticText(self, -1, label=lblNewString)
             lblNew.SetForegroundColour("Gray" if i == 0 else "White")
             lblNew.SetBackgroundColour("Black")
-            lblNew.SetFont(wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL, weight=wx.FONTWEIGHT_NORMAL))
+            
             if i == 0:
+                lblNew.SetFont(wx.Font(pointSize=10, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL, weight=wx.FONTWEIGHT_BOLD))
                 self.SizerMain.Add(lblNew, 0, wx.TOP|wx.LEFT|wx.RIGHT, 5)
             else:
+                lblNew.SetFont(wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL, weight=wx.FONTWEIGHT_NORMAL))
                 self.SizerMain.Add(lblNew, 0, wx.BOTTOM|wx.LEFT|wx.RIGHT, 5)
 
     def OnPaint(self, event):
