@@ -347,6 +347,9 @@ def GetEventDate(EventStart, EventEnd):
 def TextSplit(TextString, CharactersMin, CharactersMax):
     """Split a textstring"""
     
+    if len(TextString) <= CharactersMax:
+        return TextString
+
     words = []
     for word1 in TextString.split(" "):
         for index, word2 in enumerate(word1.split("-")):
