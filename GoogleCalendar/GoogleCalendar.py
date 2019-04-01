@@ -198,10 +198,11 @@ class MyBox(wx.Panel):
             if i == 0:
                 lblNewString = "{}-{}".format(EventStart.strftime('%H:%M'),EventEnd.strftime('%H:%M'))
             else:
-                if len(EventSummary) > 15:
-                    lblNewString = EventSummary[:15] + "\n" + EventSummary[15:]
-                else:
-                    lblNewString = EventSummary
+                lblNewString = TextSplit(EventSummary, 8, 14)
+                #if len(EventSummary) > 15:
+                #    lblNewString = TextSplit(EventSummary[:15] + "\n" + EventSummary[15:]
+                #else:
+                #    lblNewString = EventSummary
 
             lblNew = ST.GenStaticText(self, -1, label=lblNewString)
             lblNew.SetForegroundColour("Gray" if i == 0 else "White")
@@ -342,3 +343,43 @@ def GetEventDate(EventStart, EventEnd):
         return "{} {} {} {}-{}".format(WeekDaysShort[EventStart.isoweekday()-1], EventStart.day, MonthsShort[EventStart.month-1], EventStart.strftime("%H:%M"), EventEnd.strftime("%H:%M"))
     else:
         return "{} {} {} {}-{}".format(WeekDaysShort[EventStart.isoweekday()-1], EventStart.day, MonthsShort[EventStart.month-1], EventStart.strftime("%H:%M"), EventEnd.strftime("%H:%M"))
+
+def TextSplit(TextString, CharactersMin, CharactersMax):
+    """Split a textstring"""
+    
+    words = []
+    for word1 in TextString.split(" "):
+        for index, word2 in enumerate(word1.split("-")):
+            newWord = word2 + ("-" if len(word1.split("-"))>1 and index==0 else "")
+            words.append(newWord)
+
+    lines = []
+
+    outputLine = ""
+    outputLinePrev = ""
+    addSpace = False
+    wordPrev = ""
+
+    for index, word in enumerate(words):
+        outputLine += "" if addSpace == False or wordPrev[-1:] == "-" else " "
+        outputLine += word
+        addSpace = True
+        
+        if CharactersMin <= len(outputLine) <= CharactersMax:
+            lines.append(outputLine)
+            outputLine = ""
+            addSpace = False
+        elif len(outputLine) > CharactersMax:
+            charOverflow = len(outputLine) - CharactersMax + 1
+            lines.append(outputLinePrev + ("" if index == 0 or wordPrev[-1:] == "-" else " ") + word[:-charOverflow] + "-")
+            outputLine = word[-charOverflow:]
+            addSpace = True
+
+        if len(words) == index + 1 and outputLine != "":
+            lines.append(outputLine)
+
+        outputLinePrev = outputLine
+        wordPrev = word
+
+    return "\n".join(lines)
+    
