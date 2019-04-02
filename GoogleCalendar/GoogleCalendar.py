@@ -292,21 +292,25 @@ class GetGoogleEvents:
             service = build('calendar', 'v3', http=creds.authorize(Http()))
 
             # Call the Calendar API
+            eventListArgs = {"calendarId": calendar_id, "maxResults": max_results}
+
             for i in range(2):
                 print("Läser in kalender {}, index={}".format(calendar_id, i))
                 if i == 0:
-                    myDict = {"calendarId": calendar_id, "timeMin": StartTime1, "maxResults": max_results, "singleEvents": True, "orderBy": 'startTime'}
-                    if days_ahead != 0:
-                        myDict["timeMin"] = Today.strftime('%Y-%m-%dT%H:%M:%S%z')
-                        myDict["timeMax"] = (Today + timedelta(days=days_ahead)).strftime('%Y-%m-%dT%H:%M:%S%z')
-                    NewEvents = service.events().list(**myDict).execute()
-                    #NewEvents = service.events().list(calendarId=calendar_id, timeMin=StartTime1, maxResults=max_results,
-                    #                                  singleEvents=True, orderBy='startTime').execute()
+                    eventListArgs["timeMin"] = StartTime1
+                    eventListArgs["orderBy"] = "startTime"
+                    eventListArgs["singleEvents"] = True
                 elif i == 1:
-                    if track_updates is False:
-                        break
-                    NewEvents = service.events().list(calendarId=calendar_id, timeMin=StartTime2, maxResults=max_results,
-                                                      singleEvents=False, orderBy='updated').execute()
+                    if track_updates is False: break
+                    eventListArgs["timeMin"] = StartTime2
+                    eventListArgs["orderBy"] = "updated"
+                    eventListArgs["singleEvents"] = False
+
+                if days_ahead != 0:
+                    eventListArgs["timeMin"] = Today.strftime('%Y-%m-%dT%H:%M:%S%z')
+                    eventListArgs["timeMax"] = (Today + timedelta(days=days_ahead)).strftime('%Y-%m-%dT%H:%M:%S%z')
+                
+                NewEvents = service.events().list(**eventListArgs).execute()
 
                 events = NewEvents.get('items', [])
 

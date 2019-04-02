@@ -70,7 +70,7 @@ class ModuleWeather:
         sizerMain.Add(weatherBoxNew, 0, wx.ALL, 3)
 
         weatherNext8h = self.Weather.GetMedianWeather("Göteborg", Now, 8)
-        symb = int(sum(weatherNext8h["Wsymb2"]["values"])/len(weatherNext8h["Wsymb2"]["values"]))
+        symb = round(sum(weatherNext8h["Wsymb2"]["values"])/len(weatherNext8h["Wsymb2"]["values"]))
         Tmin, Tmax = (min(weatherNext8h["t"]["values"]), max(weatherNext8h["t"]["values"]))
         pmean, pmax = (sum(weatherNext8h["pmean"]["values"]), max(weatherNext8h["pmax"]["values"]))
         wsMin, wsMax = (min(weatherNext8h["ws"]["values"]), max(weatherNext8h["ws"]["values"]))
@@ -79,7 +79,7 @@ class ModuleWeather:
 
         dateTomorrow = (Now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
         weatherTomorrow = self.Weather.GetMedianWeather("Göteborg", dateTomorrow, 6)
-        symb = int(sum(weatherTomorrow["Wsymb2"]["values"])/len(weatherTomorrow["Wsymb2"]["values"]))
+        symb = round(sum(weatherTomorrow["Wsymb2"]["values"])/len(weatherTomorrow["Wsymb2"]["values"]))
         Tmin, Tmax = (min(weatherTomorrow["t"]["values"]), max(weatherTomorrow["t"]["values"]))
         pmean, pmax = (sum(weatherTomorrow["pmean"]["values"]), max(weatherTomorrow["pmax"]["values"]))
         wsMin, wsMax = (min(weatherTomorrow["ws"]["values"]), max(weatherTomorrow["ws"]["values"]))
