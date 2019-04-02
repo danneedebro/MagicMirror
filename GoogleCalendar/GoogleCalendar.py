@@ -100,7 +100,7 @@ class ModuleCalendar:
                     NewBox.BorderWidth = 2
                 
                 for event in self.CalendarData[Day]["Events"]:
-                    NewBox.PrintEvent(event["Summary"], event["EventStart"], event["EventEnd"])
+                    NewBox.PrintEvent(event["Summary"], event["EventStart"], event["EventEnd"], event["Day"], event["DaysTotal"])
                     
                 SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
 
@@ -136,7 +136,8 @@ class ModuleCalendar:
         self.PanelMain.Thaw()
 
     def AddEvent(self, EventSummary, EventStart, EventEnd):
-        for i in range(0, EventEnd.toordinal() - EventStart.toordinal()+1):
+        numberOfDays = EventEnd.toordinal() - EventStart.toordinal()+1
+        for i in range(numberOfDays):
             CurrDate = EventStart + timedelta(days=i)
             CurrDateStr = CurrDate.strftime('%Y-%m-%d')
             if CurrDateStr in self.CalendarData:
@@ -150,7 +151,7 @@ class ModuleCalendar:
                 else:
                     TimeEnd = EventEnd
 
-                self.CalendarData[CurrDateStr]["Events"].append({"Summary": EventSummary, "EventStart": TimeStart, "EventEnd": TimeEnd})
+                self.CalendarData[CurrDateStr]["Events"].append({"Summary": EventSummary, "EventStart": TimeStart, "EventEnd": TimeEnd, "Day": i+1, "DaysTotal": numberOfDays})
 
 
 
@@ -192,11 +193,14 @@ class MyBox(wx.Panel):
         self.SetSizer(self.SizerMain)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
-    def PrintEvent(self, EventSummary, EventStart, EventEnd):
+    def PrintEvent(self, EventSummary, EventStart, EventEnd, Day, DaysTotal):
 
         for i in range(2):
             if i == 0:
-                lblNewString = "{}-{}".format(EventStart.strftime('%H:%M'),EventEnd.strftime('%H:%M'))
+                if (EventEnd - EventStart).total_seconds() >= 60*60*24 - 60:
+                    lblNewString = "Dag {}/{}".format(Day, DaysTotal) if DaysTotal > 1 else "Heldagsaktivitet"
+                else:
+                    lblNewString = "{}-{}".format(EventStart.strftime('%H:%M'),EventEnd.strftime('%H:%M'))
             else:
                 lblNewString = TextSplit(EventSummary, 8, 14)
 
