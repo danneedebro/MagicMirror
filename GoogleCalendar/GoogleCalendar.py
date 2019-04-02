@@ -86,7 +86,7 @@ class ModuleCalendar:
 
             # Add a header with weeksdays on blue background    
             for Day in range(7):
-                NewBox = MyBox(panel, ThisMonday + timedelta(days=Day), True, BackgroundColour="Blue")
+                NewBox = CalendarBox(panel, ThisMonday + timedelta(days=Day), True, BackgroundColour="Blue")
                 NewBox.SetBackgroundColour("Blue")
                 SizerFlexGrid.Add(NewBox, 0, wx.EXPAND)
 
@@ -94,7 +94,7 @@ class ModuleCalendar:
             for Day in sorted(self.CalendarData.keys()):
                 CurrDate = self.CalendarData[Day]["Date"]
 
-                NewBox = MyBox(panel, CurrDate, False)
+                NewBox = CalendarBox(panel, CurrDate, False)
                 if CurrDate == Today:
                     NewBox.BorderColour = "Red"
                     NewBox.BorderWidth = 2
@@ -156,7 +156,7 @@ class ModuleCalendar:
 
 
 
-class MyBox(wx.Panel):
+class CalendarBox(wx.Panel):
     BoxWidth = 130
     BoxHeight = 150
     BorderWidth = 1
@@ -197,7 +197,7 @@ class MyBox(wx.Panel):
 
         for i in range(2):
             if i == 0:
-                if (EventEnd - EventStart).total_seconds() >= 60*60*24 - 60:
+                if (EventEnd - EventStart).total_seconds() >= 60*60*24 - 60:  # if event is between 00:00-00:00 or 00:00-23:59 --> Whole day event
                     lblNewString = "Dag {}/{}".format(Day, DaysTotal) if DaysTotal > 1 else "Heldagsaktivitet"
                 else:
                     lblNewString = "{}-{}".format(EventStart.strftime('%H:%M'),EventEnd.strftime('%H:%M'))
@@ -299,7 +299,6 @@ class GetGoogleEvents:
             eventListArgs = {"calendarId": calendar_id, "maxResults": max_results}
 
             for i in range(2):
-                print("Läser in kalender {}, index={}".format(calendar_id, i))
                 if i == 0:
                     eventListArgs["timeMin"] = StartTime1
                     eventListArgs["orderBy"] = "startTime"

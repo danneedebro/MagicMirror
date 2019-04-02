@@ -35,7 +35,6 @@ class ModuleVastTrafik:
 
     def UpdateDataSet(self):
         self.LastUpdateData = datetime.now()
-        print('Hämtar data från VästTrafik')
         self.data.update()
 
     def UpdateGraphics(self):

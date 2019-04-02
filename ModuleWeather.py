@@ -154,7 +154,6 @@ class GetSMHIWeather:
         for place_name, place in self.places.items():
             cnt += 1
 
-            print('Retrieving data from SMHI\n   lat={}, long={}'.format(place['lat'], place['long']))
             self.updated_data = datetime.now()
 
             url = self.url.format(place['long'], place['lat'])
@@ -177,19 +176,14 @@ class GetSMHIWeather:
 
         AddValues = False
         cnt = 0
-        print("Hämtar data från {}".format(LocalTime1.strftime('%Y-%m-%d %H:%M:%S.%f%z')))
         for timeValue in self.Data[PlaceName]["timeSeries"]:
             CurrValidTime = datetime.strptime(timeValue["validTime"][:-1] + "+0000", '%Y-%m-%dT%H:%M:%S%z')
             if CurrValidTime - timedelta(hours=1) <= LocalTime1 < CurrValidTime:
                 AddValues = True
 
-            if AddValues is False:
-                continue
+            if AddValues is False: continue
             cnt += 1
-            if cnt > Hours:
-                break
-
-            print(CurrValidTime.strftime('%Y-%m-%d %H:%M:%S.%f%z'))
+            if cnt > Hours: break
 
             for parameter in timeValue["parameters"]:
                 if parameter["name"] not in CollectedValues:
