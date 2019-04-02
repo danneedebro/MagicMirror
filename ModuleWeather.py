@@ -105,7 +105,7 @@ class WeatherBox(wx.Panel):
         Fields = dict()
         Fields["1. Header"] = {"Text": Header, "FontSize": 12}
         Fields["2. Temperature"] = {"Text": "{}{}C".format(TemperatureMax if TemperatureMin is None else "{} - {}".format(TemperatureMin, TemperatureMax), chr(176)), "FontSize": 14}
-        Fields["3. Precipitation"] = {"Text": "{} mm ({} mm/h)".format(Precipitation, PrecipitationMax), "FontSize": 10}
+        Fields["3. Precipitation"] = {"Text": "{:3.1f} mm ({:3.1f} mm/h)".format(Precipitation, PrecipitationMax), "FontSize": 10}
         Fields["4. Windspeed"] = {"Text": "{} m/s".format(WindSpeedMax if WindspeedMin is None else "{} - {}".format(WindspeedMin, WindSpeedMax)), "FontSize": 10}
 
         # Weather symbol
