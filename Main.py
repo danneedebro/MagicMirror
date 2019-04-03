@@ -59,14 +59,16 @@ class Example(wx.Frame):
         sizer_right = wx.BoxSizer(wx.VERTICAL)
         sizer_right_bottom = wx.BoxSizer(wx.HORIZONTAL)
         sizer_main = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_calendar2 = wx.BoxSizer(wx.VERTICAL)
 
         sizer_left.Add(panel_clock, 0, wx.LEFT, 15)
         sizer_left.Add(panel_vasttrafik, 0, wx.LEFT, 15)
         sizer_left.Add(panel_sunset, 0, wx.LEFT|wx.EXPAND, 15)
 
         sizer_right.Add(panel_calendar1, 0, wx.ALIGN_LEFT, 5)
-        sizer_right_bottom.Add(panel_weather, 0, wx.ALIGN_LEFT, 5)
-        sizer_right_bottom.Add(panel_calendar2, 0, wx.ALIGN_RIGHT, 5)
+        sizer_right_bottom.Add(panel_weather, 1, wx.ALIGN_LEFT, 5)
+        sizer_calendar2.Add(panel_calendar2, 0, wx.ALIGN_RIGHT)
+        sizer_right_bottom.Add(sizer_calendar2, 1, wx.ALIGN_RIGHT, 5)
         sizer_right.Add(sizer_right_bottom, 0, wx.EXPAND|wx.ALIGN_LEFT, 5)
 
         sizer_main.Add(sizer_left, 1, wx.ALIGN_LEFT, 5)
