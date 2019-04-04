@@ -61,6 +61,7 @@ class Example(wx.Frame):
         self.calendar2 = ModuleCalendar(panel_calendar2, userInput_googleCalendar, ShowMainCalendar = False)
 
         panel_weather = wx.Panel(self)
+        panel_weather.SetBackgroundColour("Black")
         self.weather = ModuleWeather.ModuleWeather(panel_weather, userInput_SMHI)
 
         panel_sunset = wx.Panel(self)
