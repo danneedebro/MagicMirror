@@ -5,3 +5,4 @@ __pycache__
 GoogleCalendar/Calender_personal.json
 GoogleCalendar/Calender_shared.json
 GoogleCalendar/credentials.json
+ErrorLog.txt

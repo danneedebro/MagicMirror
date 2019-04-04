@@ -195,24 +195,24 @@ class GetSMHIWeather:
 
                 
 
+if __name__ == "__main__":
+    with open('MagicMirrorSettings.json', encoding='utf-8') as data_file:
+        userSettings = json.load(data_file)
 
-with open('MagicMirrorSettings.json', encoding='utf-8') as data_file:
-    userSettings = json.load(data_file)
+    userInput_placesList = userSettings['placesList']
+    userInput_googleCalendar = userSettings['googleCalendar']
+    userInput_SMHI = userSettings['SMHI']
+    userInput_vastTrafik = userSettings['vastTrafik']
+    userInput_sunriseSunset = userSettings['sunriseSunset']
 
-userInput_placesList = userSettings['placesList']
-userInput_googleCalendar = userSettings['googleCalendar']
-userInput_SMHI = userSettings['SMHI']
-userInput_vastTrafik = userSettings['vastTrafik']
-userInput_sunriseSunset = userSettings['sunriseSunset']
-
-# Append (but don't replace) missing information SMHI 'places' from 'placesList'
-for place in userInput_SMHI['places']:
-    if place in userInput_placesList:
-        userInput_SMHI['places'][place] = {**userInput_placesList[place], **userInput_SMHI['places'][place]}
+    # Append (but don't replace) missing information SMHI 'places' from 'placesList'
+    for place in userInput_SMHI['places']:
+        if place in userInput_placesList:
+            userInput_SMHI['places'][place] = {**userInput_placesList[place], **userInput_SMHI['places'][place]}
 
 
-Weather = GetSMHIWeather(userInput_SMHI)
-Weather.GetWeather()
-Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
-Tomorrow = (Now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
-Weather.GetMedianWeather("Göteborg", Tomorrow, 6)
+    Weather = GetSMHIWeather(userInput_SMHI)
+    Weather.GetWeather()
+    Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
+    Tomorrow = (Now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+    Weather.GetMedianWeather("Göteborg", Tomorrow, 6)

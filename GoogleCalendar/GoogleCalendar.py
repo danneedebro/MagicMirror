@@ -13,6 +13,9 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 from operator import itemgetter
 
+import logging
+
+logger = logging.getLogger("MagicMirror")
 
 class ModuleCalendar:
     NumberOfWeeks = 5
@@ -39,20 +42,26 @@ class ModuleCalendar:
         self.Events = GetGoogleEvents(CalendarSettings)
         self.UpdateData()
         self.LastUpdateGraphics = datetime.now()
-        self.Draw()
+        self.UpdateGraphics()
 
     def UpdateCheck(self):
         if (datetime.now() - self.LastUpdateData).total_seconds() > self.UpdateFrequencyData:
-            self.UpdateData()
+            try:
+                self.UpdateData()
+            except Exception as e:
+                logger.error("Unexpected error updating dataset: {}".format(e), exc_info=True)
 
         if (datetime.now() - self.LastUpdateGraphics).total_seconds() > self.UpdateFrequencyGraphics:
-            self.Draw()
+            try:
+                self.UpdateGraphics()
+            except Exception as e:
+                logger.error("Unexpected error updating graphics: {}".format(e), exc_info=True)    
 
     def UpdateData(self):
         self.LastUpdateData = datetime.now()
         self.Events.GetEvents()
 
-    def Draw(self):
+    def UpdateGraphics(self):
         self.LastUpdateGraphics = datetime.now()
         self.PanelMain.Freeze()
 
@@ -71,7 +80,7 @@ class ModuleCalendar:
         ThisMonday = Today - timedelta(days=Today.isoweekday() - 1)
 
         # Draw main calandar
-        if self.ShowMainCalendar:
+        if self.ShowMainCalendar is True:
             SizerFlexGrid = wx.FlexGridSizer(self.NumberOfWeeks+1, 7, 0, 0)
 
             # Construct an empty 'CalendarData' dict
@@ -107,7 +116,7 @@ class ModuleCalendar:
             SizerMain.Add(SizerFlexGrid)
 
         # Display a last updated list
-        if self.ShowUpdatedList:
+        if self.ShowUpdatedList is True:
             # Add a List with last updated events
             lblNew = ST.GenStaticText(panel, -1, label="Senast uppdaterade")
             lblNew.SetForegroundColour("White")
@@ -258,11 +267,13 @@ class GetGoogleEvents:
         # Check to see if credentials_filename exists
         try:
             fh = open(self.credentials_filename, 'r')
-
         except FileNotFoundError:
-            print('Error: {} doesn\'t exist. Create one at Google APIs console or here: {}'.format(credentials_filename, self.url_help))
+            logger.error("Credentials file {} doesn\'t exist. Create one at Google APIs console or here: {}".format(self.credentials_filename, self.url_help), exc_info=False)
             self.status_ok = False
-            return
+        except Exception as e:
+            logger.error("Unexpected error reading Credentials file {}".format(self.credentials_filename), exc_info=True)
+        else:
+            self.status_ok = True
 
     def _getDateObject(self, str):
         # Input:    str    Datetime in the form YYYY-MM-DDTHH:MM:SS+XX:XX
@@ -271,6 +282,8 @@ class GetGoogleEvents:
         return datetime.strptime(str, '%Y-%m-%dT%H:%M:%S%z')
 
     def GetEvents(self):
+        if self.status_ok is False: return   # exit if not initialized correctly
+
         Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
         Today = Now.replace(hour=0, minute=0, second=0, microsecond=0)
         ThisMonday = Today - timedelta(days=Today.isoweekday() - 1)
@@ -313,7 +326,11 @@ class GetGoogleEvents:
                     eventListArgs["timeMin"] = Today.strftime('%Y-%m-%dT%H:%M:%S%z')
                     eventListArgs["timeMax"] = (Today + timedelta(days=days_ahead)).strftime('%Y-%m-%dT%H:%M:%S%z')
                 
-                NewEvents = service.events().list(**eventListArgs).execute()
+                try:
+                    NewEvents = service.events().list(**eventListArgs).execute()
+                except Exception as e:
+                    logger.error("Error reading events from '{}' ({}), i = {}\neventListArgs = {}".format(calendar_tag, calendar_id, i, eventListArgs), exc_info=True)
+                    continue
 
                 events = NewEvents.get('items', [])
 

@@ -1,21 +1,33 @@
 # -*- coding: utf-8 -*-
 import wx
 from datetime import datetime
+import logging
+import json
+
 import ModuleClock, ModuleVastTrafik, ModuleWeather, ModuleSunriseSunset
 from GoogleCalendar.GoogleCalendar import ModuleCalendar
 
-import json
-# import os
-# import psutil
+# Initialize logger
+LOG_FORMAT = '%(levelname)s: in %(module)s, %(asctime)s - %(message)s'
+logging.basicConfig(filename = "ErrorLog.txt", level=logging.CRITICAL, format=LOG_FORMAT, filemode = 'w')
+logger = logging.getLogger("MagicMirror")
+logger.setLevel(logging.DEBUG)
 
-with open('MagicMirrorSettings.json', encoding='utf-8') as data_file:
-    userSettings = json.load(data_file)
+logger.info("Program started")
+logger.info("Reading settings")
+try:
+    with open('MagicMirrorSettings.json', encoding='utf-8') as data_file:
+        userSettings = json.load(data_file)
+except Exception as e:
+    logger.critical("Error reading settings json: {}".format(e))
+    raise
 
-userInput_placesList = userSettings['placesList']
-userInput_googleCalendar = userSettings['googleCalendar']
-userInput_SMHI = userSettings['SMHI']
-userInput_vastTrafik = userSettings['vastTrafik']
-userInput_sunriseSunset = userSettings['sunriseSunset']
+
+userInput_placesList = userSettings['placesList'] if 'placesList' in userSettings else {}
+userInput_googleCalendar = userSettings['googleCalendar'] if 'googleCalendar' in userSettings else {}
+userInput_SMHI = userSettings['SMHI'] if 'SMHI' in userSettings else {}
+userInput_vastTrafik = userSettings['vastTrafik'] if 'vastTrafik' in userSettings else {}
+userInput_sunriseSunset = userSettings['sunriseSunset'] if 'sunriseSunset' in userSettings else {}
 
 # Append (but don't replace) missing information SMHI 'places' from 'placesList'
 for place in userInput_SMHI['places']:
@@ -66,7 +78,7 @@ class Example(wx.Frame):
         sizer_left.Add(panel_sunset, 0, wx.LEFT|wx.EXPAND, 15)
 
         sizer_right.Add(panel_calendar1, 0, wx.ALIGN_LEFT, 5)
-        sizer_right_bottom.Add(panel_weather, 1, wx.ALIGN_LEFT, 5)
+        sizer_right_bottom.Add(panel_weather, 1, wx.ALIGN_LEFT|wx.TOP, 25)
         sizer_calendar2.Add(panel_calendar2, 0, wx.ALIGN_RIGHT)
         sizer_right_bottom.Add(sizer_calendar2, 1, wx.ALIGN_RIGHT, 5)
         sizer_right.Add(sizer_right_bottom, 0, wx.EXPAND|wx.ALIGN_LEFT, 5)
@@ -98,7 +110,7 @@ class Example(wx.Frame):
         
         if (now - self.UpdatedComplete).seconds > 120:
             self.UpdatedComplete = datetime.now()
-            self.Fit()
+            self.Refresh()
         
 
     def on_keypress(self, event):
