@@ -335,7 +335,7 @@ class GetGoogleEvents:
                 events = NewEvents.get('items', [])
 
                 if not events:
-                    print('Info ' + now.strftime('(%Y-%m-%d %H:%M): ') + 'No upcoming events found')
+                    print('Info ' + Now.strftime('(%Y-%m-%d %H:%M): ') + 'No upcoming events found')
 
                 # Loop through events and add a dateTime object in current event called 'dateTimeStart' and 'dateTimeEnd'
                 for event in events:
