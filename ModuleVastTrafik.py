@@ -208,7 +208,7 @@ class VastTrafik:
 
         serverDate = tmp["DepartureBoard"].get("serverdate", now.strftime("%Y-%m-%d"))
         serverTime = tmp["DepartureBoard"].get("servertime", now.strftime("%H:%M"))
-        serverDateTime = datetime.strptime(f"{serverDate} {serverTime}", "%Y-%m-%d %H:%M")
+        serverDateTime = datetime.strptime("{} {}".format(serverDate, serverTime), "%Y-%m-%d %H:%M")
         departure_board = {'serverDateTime': serverDateTime, 'localDateTime': now, 'Departures': []}
 
         missingkeydict = {'accessibility': '', 'track': '', 'rtTrack': '', 'rtTime': '', 'rtDate': '', 'time': '', 'date': ''}
