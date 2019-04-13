@@ -4,11 +4,14 @@ from datetime import datetime
 import logging
 import json
 
-import ModuleClock, ModuleVastTrafik, ModuleWeather, ModuleSunriseSunset
+from ModuleClock import ModuleClock
+from ModuleVastTrafik import ModuleVastTrafik
+from ModuleWeather import ModuleWeather
+from ModuleSunriseSunset import ModuleSunriseSunset
 from GoogleCalendar.GoogleCalendar import ModuleCalendar
 
 # Initialize logger
-LOG_FORMAT = '%(levelname)s: in %(module)s, %(asctime)s - %(message)s'
+LOG_FORMAT = "\n%(levelname)s: in %(module)s (%(funcName)s), %(asctime)s - %(message)s"
 logging.basicConfig(filename = "ErrorLog.txt", level=logging.CRITICAL, format=LOG_FORMAT, filemode = 'w')
 logger = logging.getLogger("MagicMirror")
 logger.setLevel(logging.DEBUG)
@@ -47,26 +50,19 @@ class Example(wx.Frame):
         super(Example, self).__init__(parent, title=title, size=(900, 750))
         self.SetBackgroundColour('Black')
 
-        panel_clock = wx.Panel(self)
-        self.clock = ModuleClock.ModuleClock(panel_clock)
+        #panel_clock = wx.Panel(self)
+        self.clock = ModuleClock(self)
+        self.clock.SetBackgroundColour("Green")
 
-        panel_vasttrafik = wx.Panel(self)
-        self.vasttrafik = ModuleVastTrafik.ModuleVastTrafik(panel_vasttrafik, userInput_vastTrafik)
+        self.vasttrafik = ModuleVastTrafik(self, userInput_vastTrafik)
 
-        panel_calendar1 = wx.Panel(self)
-        self.calendar1 = ModuleCalendar(panel_calendar1, userInput_googleCalendar, ShowUpdatedList = False)
+        self.calendar1 = ModuleCalendar(self, userInput_googleCalendar, ShowUpdatedList = False)
 
-        panel_calendar2 = wx.Panel(self)
-        panel_calendar2.SetBackgroundColour("Green")
-        self.calendar2 = ModuleCalendar(panel_calendar2, userInput_googleCalendar, ShowMainCalendar = False)
+        self.calendar2 = ModuleCalendar(self, userInput_googleCalendar, ShowMainCalendar = False)
 
-        panel_weather = wx.Panel(self)
-        panel_weather.SetBackgroundColour("Black")
-        self.weather = ModuleWeather.ModuleWeather(panel_weather, userInput_SMHI)
+        self.weather = ModuleWeather(self, userInput_SMHI)
 
-        panel_sunset = wx.Panel(self)
-        panel_sunset.SetBackgroundColour("black")
-        self.sunset = ModuleSunriseSunset.ModuleSunriseSunset(panel_sunset, userInput_sunriseSunset)
+        self.sunset = ModuleSunriseSunset(self, userInput_sunriseSunset)
 
         sizer_left = wx.BoxSizer(wx.VERTICAL)
         sizer_right = wx.BoxSizer(wx.VERTICAL)
@@ -74,13 +70,13 @@ class Example(wx.Frame):
         sizer_main = wx.BoxSizer(wx.HORIZONTAL)
         sizer_calendar2 = wx.BoxSizer(wx.VERTICAL)
 
-        sizer_left.Add(panel_clock, 0, wx.LEFT, 15)
-        sizer_left.Add(panel_vasttrafik, 0, wx.LEFT, 15)
-        sizer_left.Add(panel_sunset, 0, wx.LEFT|wx.EXPAND, 15)
+        sizer_left.Add(self.clock, 0, wx.LEFT, 15)
+        sizer_left.Add(self.vasttrafik, 0, wx.LEFT, 15)
+        sizer_left.Add(self.sunset, 0, wx.LEFT|wx.EXPAND, 15)
 
-        sizer_right.Add(panel_calendar1, 0, wx.ALIGN_LEFT, 5)
-        sizer_right_bottom.Add(panel_weather, 1, wx.ALIGN_LEFT|wx.TOP, 25)
-        sizer_calendar2.Add(panel_calendar2, 0, wx.ALIGN_RIGHT)
+        sizer_right.Add(self.calendar1, 0, wx.ALIGN_LEFT, 5)
+        sizer_right_bottom.Add(self.weather, 1, wx.ALIGN_LEFT|wx.TOP, 25)
+        sizer_calendar2.Add(self.calendar2, 0, wx.ALIGN_RIGHT)
         sizer_right_bottom.Add(sizer_calendar2, 1, wx.ALIGN_RIGHT, 5)
         sizer_right.Add(sizer_right_bottom, 0, wx.EXPAND|wx.ALIGN_LEFT, 5)
 
@@ -107,7 +103,7 @@ class Example(wx.Frame):
         self.calendar1.UpdateCheck()
         self.calendar2.UpdateCheck()
         self.weather.UpdateCheck()
-        self.clock.update_check()
+        self.clock.UpdateCheck()
         
         if (now - self.UpdatedComplete).seconds > 120:
             self.UpdatedComplete = datetime.now()

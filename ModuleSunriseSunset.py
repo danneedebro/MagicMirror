@@ -1,21 +1,17 @@
-
-
 from datetime import datetime
 from datetime import timedelta
 import requests
 import wx
 import pytz
+from ModuleBase import ModuleBase
 
-
-class ModuleSunriseSunset:
+class ModuleSunriseSunset(ModuleBase):
     timezone = pytz.timezone('Europe/Stockholm')
     fontSize = 25
 
-    def __init__(self, panel_main, userSettings):
-        self.panel_main = panel_main
+    def __init__(self, parent, userSettings):
+        super().__init__(parent, **userSettings)
 
-        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 600
-        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 60
         print(userSettings)
         if 'places' in userSettings:
             place = next(iter(userSettings['places']))
@@ -27,9 +23,6 @@ class ModuleSunriseSunset:
         
         self.url = 'https://api.sunrise-sunset.org/json?lat={}&lng={}&date={}&formatted=0'.format(self.lat, self.long, datetime.now().strftime('%Y-%m-%d'))
 
-        self.updated_graphics = datetime.now()
-        self.updated_data = datetime.now()
-
         self.status_ok = False
 
         self.font1 = wx.Font(pointSize=self.fontSize, family=wx.FONTFAMILY_DEFAULT, style=wx.SLANT,
@@ -37,21 +30,13 @@ class ModuleSunriseSunset:
         self.font2 = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.NORMAL,
                              weight=wx.FONTWEIGHT_NORMAL)
 
-        self.update_dataset()
-        self.update()
+        self.UpdateCheck(updateDataNow = True, updateGraphisNow = True)
 
-    def update(self):
-        now = datetime.now()
-        self.updated_graphics = now
-
-        self.panel_main.Freeze()
-
-        # Delete all objects in main container for this module
-        for myobj in self.panel_main.GetChildren():
-            myobj.Destroy()
-
+    def UpdateGraphics(self):
+        super().UpdateGraphics()
+        
         # Create a sub panel to main panel that can be deleted next update
-        panel = wx.Panel(self.panel_main)
+        panel = wx.Panel(self)
         panel.SetBackgroundColour('Black')
         panel.Freeze()  # Freeze to avoid flickering
 
@@ -76,17 +61,18 @@ class ModuleSunriseSunset:
         panel.SetSizer(sizerMain)
 
         panel.Fit()
-        self.panel_main.Fit()
+        self.Fit()
 
         panel.Thaw()
-        self.panel_main.Thaw()
+        self.Thaw()
 
-    def update_dataset(self):
+    def UpdateData(self):
         """
         Updates the data set from SMHI weather service
 
         """
-        self.updated_data = datetime.now()
+        super().UpdateData()
+        
         self.url = 'https://api.sunrise-sunset.org/json?lat={}&lng={}&date={}&formatted=0'.format(self.lat, self.long, datetime.now().strftime('%Y-%m-%d'))
         r = requests.get(self.url)
 

@@ -5,61 +5,31 @@ import base64
 from datetime import datetime
 from datetime import timedelta
 from operator import itemgetter
-#import VastTrafik.VastTrafik
+from ModuleBase import ModuleBase
 import logging
 
 logger = logging.getLogger("MagicMirror")
 
-class ModuleVastTrafik:
-    def __init__(self, mainPanel, userSettings):
-        self.mainPanel = mainPanel
-
-        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 60
-        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 10
-
-        font_size = 10
+class ModuleVastTrafik(ModuleBase):
+    def __init__(self, parent, userSettings):
+        super().__init__(parent, **userSettings)
 
         key = userSettings['tokenKey'] if 'tokenKey' in userSettings else ''
         secret = userSettings['tokenSecret'] if 'tokenSecret' in userSettings else ''
         stopId = userSettings['stopId'] if 'stopId' in userSettings else ''
         
-        self.LastUpdateGraphics = datetime.now()
-        self.LastUpdateData = datetime.now()
-        
         self.data = VastTrafik(key, secret, stopId)
-        self.UpdateGraphics()
+        self.UpdateCheck(updateDataNow = True)
 
-    def UpdateCheck(self):
-        now = datetime.now()
-
-        if (now - self.LastUpdateGraphics).seconds >= self.updateFreqGraphics:
-            try:
-                self.UpdateGraphics()
-            except Exception as e:
-                logger.error("Unexpected error updating graphics: {}".format(e), exc_info=True)
-
-        if (now - self.LastUpdateData).seconds >= self.updateFreqData:
-            try:
-                self.UpdateDataSet()
-            except Exception as e:
-                logger.error("Unexpected error updating dataset: {}".format(e), exc_info=True)
-            
-
-
-    def UpdateDataSet(self):
-        self.LastUpdateData = datetime.now()
+    def UpdateData(self):
+        super().UpdateData()
         self.data.update()
 
     def UpdateGraphics(self):
-        self.LastUpdateGraphics = datetime.now()
-        self.mainPanel.Freeze()   # Freeze to avoid flickering
-
-        # Delete all objects in main container for this module
-        for myobj in self.mainPanel.GetChildren():
-            myobj.Destroy()
+        super().UpdateGraphics()
 
         # Create a sub panel to main panel that can be deleted next update
-        panel = wx.Panel(self.mainPanel, style=wx.EXPAND|wx.ALIGN_CENTER)
+        panel = wx.Panel(self, style=wx.EXPAND|wx.ALIGN_CENTER)
         panel.SetBackgroundColour('Black')
         panel.Freeze()    # Freeze to avoid flickering
 
@@ -83,10 +53,10 @@ class ModuleVastTrafik:
 
         panel.SetSizer(sizerMain)
         panel.Fit()
-        self.mainPanel.Fit()
+        self.Fit()
 
         panel.Thaw()          # This avoids flickering
-        self.mainPanel.Thaw()
+        self.Thaw()
 
 
 class DepartureTable(wx.Panel):

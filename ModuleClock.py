@@ -1,40 +1,28 @@
-#   -----------------------------
-#   |DATE         |         WEEK|
-#   -----------------------------
-#   |           TIME            |
-#   |                           |
-#   -----------------------------
-
-
 from datetime import datetime
 import wx
 import wx.lib.stattext as ST
 import pytz
+from ModuleBase import ModuleBase
 
 
-class ModuleClock:
-    def __init__(self, panel_main):
-        self.panel_main = panel_main
+class ModuleClock(ModuleBase):
+    
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
 
         self.font1 = wx.Font(72, wx.DECORATIVE, wx.NORMAL, wx.NORMAL)
         self.font2 = wx.Font(16, wx.DECORATIVE, wx.ITALIC, wx.NORMAL)
 
-        self.last_update = datetime.now()
-        self.update()
+        self.UpdateGraphics()
 
-    def update_check(self):
-        if self.last_update.minute != datetime.now().minute:
-            self.update()
+    def UpdateCheck(self):
+        if self.lastUpdateGraphics.minute != datetime.now().minute:
+            super().UpdateCheck(updateGraphicsNow = True)
 
-    def update(self):
-        self.last_update = datetime.now()
-        self.panel_main.Freeze()
+    def UpdateGraphics(self):
+        super().UpdateGraphics()
 
-        # Delete all objects in main container for this module
-        for myobj in self.panel_main.GetChildren():
-            myobj.Destroy()
-
-        panel = wx.Panel(self.panel_main)
+        panel = wx.Panel(self)
         panel.SetBackgroundColour('Black')
         now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
         #now = datetime.now()
@@ -65,5 +53,5 @@ class ModuleClock:
 
         panel.SetSizer(sizer_main)
         panel.Fit()
-        self.panel_main.Fit()
-        self.panel_main.Thaw()
+        self.Fit()
+        self.Thaw()

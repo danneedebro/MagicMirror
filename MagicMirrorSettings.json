@@ -5,7 +5,7 @@
         "Älvsbyn": {"lat": 65.67258, "long": 21.03356}
     },
     "googleCalendar":{
-        "updateFreqData": 60,
+        "updateFreqData": 120,
         "updateFreqGraphics": 10,
         "daysToZoom": 3,
         "weeksToPlot": 4,
@@ -31,7 +31,7 @@
     },
     "vastTrafik": {
         "updateFreqData": 60,
-        "updateFreqGraphics": 10,
+        "updateFreqGraphics": 15,
         "tokenKey": "fYzDg69mhe3eytZLUGiTBrFl2cQa",
         "tokenSecret": "0e163wTfFJAFteDgl607KhMkb2Ia",
         "stop": "Svingeln",

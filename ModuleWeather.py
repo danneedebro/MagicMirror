@@ -4,10 +4,11 @@ import requests
 import wx
 import wx.lib.stattext as ST
 import pytz
+from ModuleBase import ModuleBase
 
 import json   # REMOVE
 
-class ModuleWeather:
+class ModuleWeather(ModuleBase):
     url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/{}/lat/{}/data.json'
     timezone = pytz.timezone('Europe/Stockholm')
     weather_symb = {1: "Klart", 2: "Lätt molnighet", 3: "Halvklart", 4: "Molnigt", 5: "Mycket moln", 6: "Mulet",
@@ -17,44 +18,25 @@ class ModuleWeather:
                     20: "Kraftigt regn", 21: "Åska", 22: "Lätt snöblandat regn", 23: "Snöblandat regn",
                     24: "Kraftigt snöblandat regn", 25: "Lätt snöfall", 26: "Snöfall", 27: "Ymnigt snöfall"}
 
-    def __init__(self, Parent, userSettings):
-        self.PanelMain = Parent
+    def __init__(self, parent, userSettings):
+        super().__init__(parent, **userSettings)
 
-        self.updateFreqData = userSettings['updateFreqData'] if 'updateFreqData' in userSettings else 600
-        self.updateFreqGraphics = userSettings['updateFreqGraphics'] if 'updateFreqGraphics' in userSettings else 60
-        
         self.places = userSettings['places'] if 'places' in userSettings else {'Skellefteå': {'lat': 64.75203, 'long': 20.95350}}
         
         self.Weather = GetSMHIWeather(userSettings)
         self.UpdateData()
         
         self.UpdateGraphics()
-        
-
-    def UpdateCheck(self):
-        now = datetime.now()
-        if (now - self.LastUpdateData).total_seconds() > 600:
-            self.UpdateData()
-
-        if (now - self.LastUpdateGraphics).total_seconds() > 60:
-            self.UpdateGraphics()
 
     def UpdateData(self):
-        self.LastUpdateData = datetime.now()
+        super().UpdateData()
         self.Weather.GetWeather()
 
-
     def UpdateGraphics(self):
-        self.LastUpdateGraphics = datetime.now()
-
-        self.PanelMain.Freeze()
-
-        # Delete all objects in main container for this module
-        for myobj in self.PanelMain.GetChildren():
-            myobj.Destroy()
+        super().UpdateGraphics()
 
         # Create a sub panel to main panel that can be deleted next update
-        panel = wx.Panel(self.PanelMain)
+        panel = wx.Panel(self)
         panel.SetBackgroundColour('Black')
 
         Now = pytz.timezone('Europe/Stockholm').localize(datetime.now())
@@ -86,9 +68,8 @@ class ModuleWeather:
         weatherBoxNew = WeatherBox(panel, "Imorgon 9-15", symb, Tmin, Tmax, pmean, pmax, wsMin, wsMax, 0, 0, 3, 7)
         sizerMain.Add(weatherBoxNew, 0, wx.ALL, 3)
 
-
         panel.SetSizerAndFit(sizerMain)
-        self.PanelMain.Thaw()
+        self.Thaw()
 
 
 

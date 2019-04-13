@@ -13,11 +13,13 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 from operator import itemgetter
 
+from ModuleBase import ModuleBase
+
 import logging
 
 logger = logging.getLogger("MagicMirror")
 
-class ModuleCalendar:
+class ModuleCalendar(ModuleBase):
     NumberOfWeeks = 5
     CalendarData = dict()
     UpdateFrequencyData = 120
@@ -25,11 +27,9 @@ class ModuleCalendar:
     ShowMainCalendar = True
     ShowUpdatedList = True
 
-    def __init__(self, Parent, CalendarSettings, **kwargs):
-        self.PanelMain = Parent
+    def __init__(self, parent, CalendarSettings, **kwargs):
+        super().__init__(parent, **CalendarSettings)
 
-        self.UpdateFrequencyData = CalendarSettings["updateFreqData"] if "updateFreqData" in CalendarSettings else self.UpdateFrequencyData
-        self.UpdateFrequencyGraphics = CalendarSettings["updateFreqGraphics"] if "updateFreqGraphics" in CalendarSettings else self.UpdateFrequencyGraphics
         self.NumberOfWeeks = CalendarSettings["weeksToPlot"] if "weeksToPlot" in CalendarSettings else self.NumberOfWeeks
 
         # Read optional keyword arguments
@@ -38,39 +38,18 @@ class ModuleCalendar:
         self.UpdateFrequencyData = kwargs["UpdateFrequencyData"] if "UpdateFrequencyData" in kwargs else self.UpdateFrequencyData
         self.UpdateFrequencyGraphics = kwargs["UpdateFrequencyGraphics"] if "UpdateFrequencyGraphics" in kwargs else self.UpdateFrequencyGraphics
 
-        self.LastUpdateData = datetime.now() - timedelta(seconds=self.UpdateFrequencyData)
         self.Events = GetGoogleEvents(CalendarSettings)
-        self.UpdateData()
-        self.LastUpdateGraphics = datetime.now()
+        self.UpdateCheck(updateDataNow=True)
         self.UpdateGraphics()
-
-    def UpdateCheck(self):
-        if (datetime.now() - self.LastUpdateData).total_seconds() > self.UpdateFrequencyData:
-            try:
-                self.UpdateData()
-            except Exception as e:
-                logger.error("Unexpected error updating dataset: {}".format(e), exc_info=True)
-
-        if (datetime.now() - self.LastUpdateGraphics).total_seconds() > self.UpdateFrequencyGraphics:
-            try:
-                self.UpdateGraphics()
-            except Exception as e:
-                logger.error("Unexpected error updating graphics: {}".format(e), exc_info=True)    
-
+   
     def UpdateData(self):
-        self.LastUpdateData = datetime.now()
+        super().UpdateData()
         self.Events.GetEvents()
 
     def UpdateGraphics(self):
-        self.LastUpdateGraphics = datetime.now()
-        self.PanelMain.Freeze()
+        super().UpdateGraphics()
 
-        # Delete all objects in main container for this module
-        for myobj in self.PanelMain.GetChildren():
-            myobj.DestroyChildren()
-            myobj.Destroy()
-
-        panel = wx.Panel(self.PanelMain)
+        panel = wx.Panel(self)
         panel.SetBackgroundColour("Black")
 
         SizerMain = wx.BoxSizer(wx.VERTICAL)
@@ -142,7 +121,7 @@ class ModuleCalendar:
                 SizerMain.Add(SizerEvent)
 
         panel.SetSizerAndFit(SizerMain)
-        self.PanelMain.Thaw()
+        self.Thaw()
 
     def AddEvent(self, EventSummary, EventStart, EventEnd):
         numberOfDays = EventEnd.toordinal() - EventStart.toordinal()+1
@@ -372,13 +351,15 @@ def GetEventDate(EventStart, EventEnd):
     else:
         return "{} {} {} {}-{}".format(WeekDaysShort[EventStart.isoweekday()-1], EventStart.day, MonthsShort[EventStart.month-1], EventStart.strftime("%H:%M"), EventEnd.strftime("%H:%M"))
 
+
 def TextSplit(TextString, CharactersMin, CharactersMax):
-    """Split a textstring"""
+    """Splits a textstring"""
     
     if len(TextString) <= CharactersMax:
         return TextString
 
     words = []
+    # Split up words after space and "-"
     for word1 in TextString.split(" "):
         for index, word2 in enumerate(word1.split("-")):
             newWord = word2 + ("-" if len(word1.split("-"))>1 and index==0 else "")
