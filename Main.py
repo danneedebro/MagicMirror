@@ -14,7 +14,7 @@ from GoogleCalendar.GoogleCalendar import ModuleCalendar
 LOG_FORMAT = "\n%(levelname)s: in %(module)s (%(funcName)s), %(asctime)s - %(message)s"
 logging.basicConfig(filename = "ErrorLog.txt", level=logging.CRITICAL, format=LOG_FORMAT, filemode = 'w')
 logger = logging.getLogger("MagicMirror")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 logger.info("Program started")
 logger.info("Reading settings")
@@ -107,6 +107,14 @@ class Example(wx.Frame):
         
         if (now - self.UpdatedComplete).seconds > 120:
             self.UpdatedComplete = datetime.now()
+            #self.vasttrafik.Fit()
+            #self.vasttrafik.Fit()
+            #self.calendar1.Fit()
+            #self.calendar2.Fit()
+            #self.weather.Fit()
+            #self.clock.Fit()
+            self.Fit()
+            self.ShowFullScreen(True)
             self.Refresh()
         
 
